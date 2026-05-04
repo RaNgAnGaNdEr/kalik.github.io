@@ -45,9 +45,47 @@
         .subtitle {
             color: #888;
             font-size: 14px;
-            margin-bottom: 32px;
+            margin-bottom: 20px;
             border-left: 3px solid #2ecc71;
             padding-left: 12px;
+        }
+
+        /* Вкладки */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            background: #1e1e1e;
+            border-radius: 16px;
+            padding: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #2ecc71;
+            color: #1a1a1a;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.3s ease-out;
         }
 
         .section {
@@ -68,7 +106,7 @@
             font-size: 24px;
         }
 
-        /* Чикоичный 3D барабан */
+        /* 3D барабан */
         .picker-3d {
             position: relative;
             background: rgba(30, 30, 30, 0.9);
@@ -162,7 +200,7 @@
             border-radius: 12px;
         }
 
-        .flavor-select {
+        .flavor-select, .comment-input {
             width: 100%;
             padding: 14px 16px;
             background: #1e1e1e;
@@ -173,7 +211,13 @@
             cursor: pointer;
         }
 
-        .flavor-select:focus {
+        .comment-input {
+            cursor: text;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .flavor-select:focus, .comment-input:focus {
             outline: none;
             border-color: #2ecc71;
         }
@@ -321,6 +365,77 @@
             font-size: 14px;
             display: none;
         }
+
+        /* История заказов */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: #1e1e1e;
+            border: 1px solid #2c2c2c;
+            border-radius: 16px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            border-color: #2ecc71;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .history-id {
+            color: #2ecc71;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .history-date {
+            color: #888;
+            font-size: 12px;
+        }
+
+        .history-status {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: #aaa;
+            margin-top: 8px;
+        }
+
+        .history-details p {
+            margin: 4px 0;
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -328,95 +443,117 @@
     <h1>Биг Заза</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <div class="section">
-        <div class="section-title"><span>⏰</span><span>Время</span></div>
-        <div class="picker-3d">
-            <div class="picker-3d-container">
-                <div class="picker-column">
-                    <div class="picker-label">Час</div>
-                    <div class="picker-track" id="hourTrack"></div>
-                </div>
-                <div class="picker-column">
-                    <div class="picker-label">Минуты</div>
-                    <div class="picker-track" id="minuteTrack"></div>
-                </div>
-            </div>
-            <div class="picker-overlay"></div>
-        </div>
+    <!-- Вкладки -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('booking')">📝 Новый заказ</button>
+        <button class="tab-btn" onclick="switchTab('history')">📜 Мои заказы</button>
     </div>
 
-    <div class="section">
-        <div class="section-title"><span>📍</span><span>Зона</span></div>
-        <select id="zone" class="flavor-select">
-            <option value="Основная зона">Основная зона 🪑</option>
-            <option value="VIP комната">VIP комната 👑</option>
-            <option value="Балкон">Балкон 🌙</option>
-            <option value="Терраса">Терраса 🌿</option>
-        </select>
-    </div>
-
-    <div class="section">
-        <div class="section-title"><span>💨</span><span>Кальян</span></div>
-        <select id="flavor" class="flavor-select" style="margin-bottom: 12px;">
-            <option value="Мята">Мята 🌿</option>
-            <option value="Яблоко">Яблоко 🍎</option>
-            <option value="Арбуз">Арбуз 🍉</option>
-            <option value="Виноград">Виноград 🍇</option>
-            <option value="Клубника">Клубника 🍓</option>
-            <option value="Персик">Персик 🍑</option>
-            <option value="Манго">Манго 🥭</option>
-            <option value="Двойное яблоко">Двойное яблоко 🍎🍎</option>
-            <option value="Кола">Кола 🥤</option>
-        </select>
-        <div class="picker-3d">
-            <div class="picker-3d-container">
-                <div class="picker-column">
-                    <div class="picker-label">Крепость</div>
-                    <div class="picker-track" id="strengthTrack"></div>
+    <!-- Вкладка: Новый заказ -->
+    <div id="bookingTab" class="tab-content active">
+        <div class="section">
+            <div class="section-title"><span>⏰</span><span>Время</span></div>
+            <div class="picker-3d">
+                <div class="picker-3d-container">
+                    <div class="picker-column">
+                        <div class="picker-label">Час</div>
+                        <div class="picker-track" id="hourTrack"></div>
+                    </div>
+                    <div class="picker-column">
+                        <div class="picker-label">Минуты</div>
+                        <div class="picker-track" id="minuteTrack"></div>
+                    </div>
                 </div>
-            </div>
-            <div class="picker-overlay"></div>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title"><span>🍹</span><span>Напитки</span></div>
-        <div class="drinks-grid">
-            <div class="drink-card" data-name="Лимонад" data-price="300" data-id="lemonade">
-                <div class="drink-emoji">🍋</div>
-                <div class="drink-info"><div class="drink-name">Лимонад</div><div class="drink-price">300 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-lemonade">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
-            </div>
-            <div class="drink-card" data-name="Чай" data-price="200" data-id="tea">
-                <div class="drink-emoji">🍵</div>
-                <div class="drink-info"><div class="drink-name">Чай</div><div class="drink-price">200 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-tea">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
-            </div>
-            <div class="drink-card" data-name="Мохито" data-price="350" data-id="mojito">
-                <div class="drink-emoji">🍹</div>
-                <div class="drink-info"><div class="drink-name">Мохито</div><div class="drink-price">350 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-mojito">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
-            </div>
-            <div class="drink-card" data-name="Red Bull" data-price="225" data-id="redbull">
-                <div class="drink-emoji">⚡</div>
-                <div class="drink-info"><div class="drink-name">Red Bull</div><div class="drink-price">225 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-redbull">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
-            </div>
-            <div class="drink-card" data-name="Сок" data-price="100" data-id="juice">
-                <div class="drink-emoji">🧃</div>
-                <div class="drink-info"><div class="drink-name">Сок</div><div class="drink-price">100 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-juice">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                <div class="picker-overlay"></div>
             </div>
         </div>
+
+        <div class="section">
+            <div class="section-title"><span>📍</span><span>Зона</span></div>
+            <select id="zone" class="flavor-select">
+                <option value="Основная зона">Основная зона 🪑</option>
+                <option value="VIP комната">VIP комната 👑</option>
+                <option value="Балкон">Балкон 🌙</option>
+                <option value="Терраса">Терраса 🌿</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>💨</span><span>Кальян</span></div>
+            <select id="flavor" class="flavor-select" style="margin-bottom: 12px;">
+                <option value="Мята">Мята 🌿</option>
+                <option value="Яблоко">Яблоко 🍎</option>
+                <option value="Арбуз">Арбуз 🍉</option>
+                <option value="Виноград">Виноград 🍇</option>
+                <option value="Клубника">Клубника 🍓</option>
+                <option value="Персик">Персик 🍑</option>
+                <option value="Манго">Манго 🥭</option>
+                <option value="Двойное яблоко">Двойное яблоко 🍎🍎</option>
+                <option value="Кола">Кола 🥤</option>
+            </select>
+            <div class="picker-3d">
+                <div class="picker-3d-container">
+                    <div class="picker-column">
+                        <div class="picker-label">Крепость</div>
+                        <div class="picker-track" id="strengthTrack"></div>
+                    </div>
+                </div>
+                <div class="picker-overlay"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title"><span>🍹</span><span>Напитки</span></div>
+            <div class="drinks-grid">
+                <div class="drink-card" data-name="Лимонад" data-price="300" data-id="lemonade">
+                    <div class="drink-emoji">🍋</div>
+                    <div class="drink-info"><div class="drink-name">Лимонад</div><div class="drink-price">300 ₽/шт</div></div>
+                    <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-lemonade">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                </div>
+                <div class="drink-card" data-name="Чай" data-price="200" data-id="tea">
+                    <div class="drink-emoji">🍵</div>
+                    <div class="drink-info"><div class="drink-name">Чай</div><div class="drink-price">200 ₽/шт</div></div>
+                    <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-tea">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                </div>
+                <div class="drink-card" data-name="Мохито" data-price="350" data-id="mojito">
+                    <div class="drink-emoji">🍹</div>
+                    <div class="drink-info"><div class="drink-name">Мохито</div><div class="drink-price">350 ₽/шт</div></div>
+                    <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-mojito">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                </div>
+                <div class="drink-card" data-name="Red Bull" data-price="225" data-id="redbull">
+                    <div class="drink-emoji">⚡</div>
+                    <div class="drink-info"><div class="drink-name">Red Bull</div><div class="drink-price">225 ₽/шт</div></div>
+                    <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-redbull">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                </div>
+                <div class="drink-card" data-name="Сок" data-price="100" data-id="juice">
+                    <div class="drink-emoji">🧃</div>
+                    <div class="drink-info"><div class="drink-name">Сок</div><div class="drink-price">100 ₽/шт</div></div>
+                    <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-juice">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поле для примечания -->
+        <div class="section">
+            <div class="section-title"><span>📝</span><span>Примечание к заказу</span></div>
+            <textarea id="comment" class="comment-input" rows="3" placeholder="Особые пожелания, дополнительные требования..."></textarea>
+        </div>
+
+        <div class="total-price">
+            <div class="total-label">💰 ИТОГО К ОПЛАТЕ</div>
+            <div class="total-amount" id="totalAmount">1300 ₽</div>
+            <div class="total-breakdown" id="totalBreakdown">(кальян 1300₽)</div>
+        </div>
+        <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
+        <div id="errorMessage" class="error-message"></div>
     </div>
 
-    <div class="total-price">
-        <div class="total-label">💰 ИТОГО К ОПЛАТЕ</div>
-        <div class="total-amount" id="totalAmount">1300 ₽</div>
-        <div class="total-breakdown" id="totalBreakdown">(кальян 1300₽)</div>
+    <!-- Вкладка: История заказов -->
+    <div id="historyTab" class="tab-content">
+        <div id="historyList" class="history-list">
+            <div class="empty-history">📭 У вас пока нет заказов</div>
+        </div>
     </div>
-    <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
-    <div id="errorMessage" class="error-message"></div>
 </div>
 
 <script>
@@ -426,17 +563,71 @@
 
     const BOT_API_URL = "https://kalik-github-io-1.onrender.com/booking";
     const HOOKAH_PRICE = 1300;
+    const STORAGE_KEY = "bigzaza_orders";
 
-    // Бесконечный циклический барабан
+    // === Управление вкладками ===
+    window.switchTab = function(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (tab === 'booking') {
+            document.querySelector('.tab-btn:first-child').classList.add('active');
+            document.getElementById('bookingTab').classList.add('active');
+        } else {
+            document.querySelector('.tab-btn:last-child').classList.add('active');
+            document.getElementById('historyTab').classList.add('active');
+            renderHistory();
+        }
+    };
+
+    // === Работа с историей заказов ===
+    function saveOrder(orderData) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        orders.unshift(orderData); // новый заказ в начало
+        // Ограничим историю 50 заказами
+        if (orders.length > 50) orders.pop();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    }
+
+    function getOrders() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function renderHistory() {
+        const orders = getOrders();
+        const historyList = document.getElementById('historyList');
+        
+        if (orders.length === 0) {
+            historyList.innerHTML = '<div class="empty-history">📭 У вас пока нет заказов</div>';
+            return;
+        }
+        
+        historyList.innerHTML = orders.map(order => `
+            <div class="history-item">
+                <div class="history-header">
+                    <span class="history-id">#${order.booking_id}</span>
+                    <span class="history-date">${order.date}</span>
+                    <span class="history-status ${order.status === 'pending' ? 'pending' : ''}">${order.status === 'pending' ? '⏳ Новый' : '✅ Принят'}</span>
+                </div>
+                <div class="history-details">
+                    <p>⏰ ${order.time} | 📍 ${order.zone}</p>
+                    <p>💨 ${order.hookah_flavor} (${order.hookah_strength}/10)</p>
+                    ${order.drinks_text ? `<p>🍹 ${order.drinks_text}</p>` : ''}
+                    ${order.comment ? `<p>📝 ${order.comment}</p>` : ''}
+                    <p><strong>💰 ${order.total_price} ₽</strong></p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // === Бесконечный циклический барабан ===
     function createInfinitePicker(containerId, values, onSelect, defaultIndex = 0) {
         const container = document.getElementById(containerId);
         if (!container) return;
         
         const itemHeight = 50;
-        const visibleItems = 3;
         const bufferSize = 100;
         
-        // Создаём витрину
         function buildItems() {
             let html = '';
             for (let i = 0; i < bufferSize; i++) {
@@ -463,8 +654,7 @@
                     else item.classList.remove('active');
                 });
                 const value = items[bufferIdx]?.dataset.value;
-                const realIdx = bufferIdx % values.length;
-                if (value && onSelect) onSelect(value, realIdx);
+                if (value && onSelect) onSelect(value);
             }
         };
         
@@ -477,7 +667,6 @@
             setTimeout(updateActive, 120);
         };
         
-        // Устанавливаем начальную позицию (defaultIndex)
         const startIdx = Math.floor(bufferSize / 2) + defaultIndex;
         container.scrollTop = startIdx * itemHeight - (container.clientHeight / 2) + (itemHeight / 2);
         
@@ -509,9 +698,8 @@
         lemonade: { name: "Лимонад", price: 300, qty: 0 },
         tea: { name: "Чай", price: 200, qty: 0 },
         mojito: { name: "Мохито", price: 350, qty: 0 },
-        coffee: { name: "Кофе", price: 180, qty: 0 },
-        redbull: { name: "Мохито", price: 225, qty: 0 },
-        juice: { name: "Мохито", price: 100, qty: 0 },
+        redbull: { name: "Red Bull", price: 225, qty: 0 },
+        juice: { name: "Сок", price: 100, qty: 0 },
     };
     
     function updateDrinkUI(drinkId) {
@@ -557,6 +745,29 @@
     
     updateTotal();
     
+    // Форматирование заказа для отображения
+    function formatOrderMessage(order, bookingId) {
+        const drinksList = order.drinks.map(d => `• ${d.name} x${d.quantity} - ${d.price * d.quantity}₽`).join('\n');
+        return `
+🚨 НОВЫЙ ЗАКАЗ #${bookingId} 🚨
+
+👤 Клиент: ${order.user_name}
+⏰ Время: ${order.time}
+📍 Зона: ${order.zone}
+
+💨 Кальян:
+• Вкус: ${order.hookah.flavor}
+• Крепость: ${order.hookah.strength}/10
+• Цена: ${order.hookah.price}₽
+
+🍹 Напитки:
+${drinksList || '• Не выбраны'}
+
+${order.comment ? `📝 Примечание:\n${order.comment}\n` : ''}
+💰 Итого: ${order.totalPrice}₽
+        `;
+    }
+    
     async function submitOrder() {
         const errorDiv = document.getElementById('errorMessage');
         errorDiv.style.display = 'none';
@@ -565,11 +776,16 @@
         btn.innerText = '⏳ Отправка...';
         
         const user = tg.initDataUnsafe?.user || {};
-        const selectedDrinks = Object.entries(drinks).filter(([_,d]) => d.qty > 0).map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
+        const selectedDrinks = Object.entries(drinks)
+            .filter(([_,d]) => d.qty > 0)
+            .map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
+        
+        const comment = document.getElementById('comment').value;
         
         const payload = {
             user_id: user.id || 0,
             user_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Гость",
+            user_chat_id: user.id, // для отправки копии клиенту
             time: `${selectedHour}:${selectedMinute}`,
             zone: document.getElementById("zone").value,
             hookah: {
@@ -579,7 +795,8 @@
             },
             drinks: selectedDrinks,
             drinksTotal: getDrinksTotal(),
-            totalPrice: HOOKAH_PRICE + getDrinksTotal()
+            totalPrice: HOOKAH_PRICE + getDrinksTotal(),
+            comment: comment
         };
         
         try {
@@ -590,7 +807,47 @@
             });
             const result = await res.json();
             if (result.status === 'success') {
-                tg.showPopup({ title: '✅ Готово!', message: `Заказ #${result.booking_id} на сумму ${payload.totalPrice}₽ принят.`, buttons: [{type: 'ok'}] });
+                // Формируем сообщение для показа клиенту
+                const clientMessage = formatOrderMessage(payload, result.booking_id);
+                
+                // Сохраняем в историю
+                const historyOrder = {
+                    booking_id: result.booking_id,
+                    date: new Date().toLocaleString(),
+                    time: payload.time,
+                    zone: payload.zone,
+                    hookah_flavor: payload.hookah.flavor,
+                    hookah_strength: payload.hookah.strength,
+                    drinks_text: selectedDrinks.map(d => `${d.name} x${d.quantity}`).join(', '),
+                    comment: comment,
+                    total_price: payload.totalPrice,
+                    status: 'pending'
+                };
+                saveOrder(historyOrder);
+                
+                tg.showPopup({ 
+                    title: '✅ Заказ оформлен!', 
+                    message: `Заказ #${result.booking_id} на сумму ${payload.totalPrice}₽ принят.\n\nКопия заказа отправлена вам в чат.`, 
+                    buttons: [{type: 'ok'}]
+                });
+                
+                // Отправляем копию заказа клиенту в Telegram
+                if (user.id) {
+                    tg.sendData(JSON.stringify({
+                        action: 'send_copy',
+                        chat_id: user.id,
+                        message: clientMessage
+                    }));
+                }
+                
+                // Очищаем корзину и примечание
+                for (const id of Object.keys(drinks)) {
+                    drinks[id].qty = 0;
+                    updateDrinkUI(id);
+                }
+                document.getElementById('comment').value = '';
+                updateTotal();
+                
             } else throw new Error(result.message || 'Ошибка сервера');
         } catch (err) {
             errorDiv.innerText = `❌ Ошибка: ${err.message}`;
