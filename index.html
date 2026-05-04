@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Lounge Booking</title>
+    <title>Биг Заза</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -397,10 +397,15 @@
                 <div class="drink-info"><div class="drink-name">Мохито</div><div class="drink-price">350 ₽/шт</div></div>
                 <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-mojito">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
-            <div class="drink-card" data-name="Кофе" data-price="180" data-id="coffee">
-                <div class="drink-emoji">☕</div>
-                <div class="drink-info"><div class="drink-name">Кофе</div><div class="drink-price">180 ₽/шт</div></div>
-                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-coffee">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+            <div class="drink-card" data-name="Red Bull" data-price="225" data-id="redbull">
+                <div class="drink-emoji">⚡</div>
+                <div class="drink-info"><div class="drink-name">Red Bull</div><div class="drink-price">225 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-redbull">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
+            </div>
+            <div class="drink-card" data-name="Сок" data-price="100" data-id="juice">
+                <div class="drink-emoji">🧃</div>
+                <div class="drink-info"><div class="drink-name">Сок</div><div class="drink-price">100 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-juice">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
         </div>
     </div>
@@ -504,7 +509,9 @@
         lemonade: { name: "Лимонад", price: 300, qty: 0 },
         tea: { name: "Чай", price: 200, qty: 0 },
         mojito: { name: "Мохито", price: 350, qty: 0 },
-        coffee: { name: "Кофе", price: 180, qty: 0 }
+        coffee: { name: "Кофе", price: 180, qty: 0 },
+        redbull: { name: "Мохито", price: 225, qty: 0 },
+        juice: { name: "Мохито", price: 100, qty: 0 },
     };
     
     function updateDrinkUI(drinkId) {
