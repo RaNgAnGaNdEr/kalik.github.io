@@ -4,8 +4,10 @@ import sqlite3
 import requests
 from datetime import datetime
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Добавляем CORS поддержку
 
 app = Flask(__name__)
+CORS(app)  # Разрешаем запросы с любых доменов
 
 # Настройки из переменных окружения Render
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
@@ -48,8 +50,12 @@ def send_telegram_message(chat_id, text):
         return None
 
 # API для приёма заказов из Mini App
-@app.route('/booking', methods=['POST'])
+@app.route('/booking', methods=['POST', 'OPTIONS'])
 def create_booking():
+    # Обрабатываем preflight запрос (OPTIONS)
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         data = request.json
         print(f"📦 Получен заказ: {data}")
@@ -107,13 +113,19 @@ def create_booking():
         else:
             print("⚠️ BOT_TOKEN или STAFF_CHAT_ID не заданы")
         
-        return jsonify({'status': 'success', 'booking_id': booking_id})
+        # Добавляем CORS заголовки в ответ
+        response = jsonify({'status': 'success', 'booking_id': booking_id})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        return response
     
     except Exception as e:
         print(f"❌ Ошибка: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        response = jsonify({'status': 'error', 'message': str(e)})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
 
-# Команда для проверки работы бота (через GET запрос)
 @app.route('/send_test', methods=['GET'])
 def send_test():
     """Тестовая отправка сообщения"""
@@ -124,16 +136,20 @@ def send_test():
 
 @app.route('/', methods=['GET'])
 def health():
-    return jsonify({'status': 'ok', 'message': 'Bot is running!'})
+    response = jsonify({'status': 'ok', 'message': 'Bot is running!'})
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 @app.route('/test', methods=['GET'])
 def test():
-    return jsonify({
+    response = jsonify({
         'status': 'ok',
         'bot_token_set': bool(BOT_TOKEN),
         'chat_id_set': bool(STAFF_CHAT_ID),
         'chat_id': STAFF_CHAT_ID
     })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
