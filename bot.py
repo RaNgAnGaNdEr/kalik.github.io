@@ -4,10 +4,10 @@ import sqlite3
 import requests
 from datetime import datetime
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Добавляем CORS поддержку
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # Разрешаем запросы с любых доменов
+CORS(app)
 
 # Настройки из переменных окружения Render
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
@@ -27,6 +27,7 @@ def init_db():
                   strength INTEGER,
                   drinks TEXT,
                   total_price INTEGER,
+                  comment TEXT,
                   created_at TEXT)''')
     conn.commit()
     conn.close()
@@ -49,10 +50,75 @@ def send_telegram_message(chat_id, text):
         print(f"Ошибка отправки: {e}")
         return None
 
+# Функция форматирования заказа для клиента
+def format_order_for_client(data, booking_id):
+    """Форматирует заказ для отправки клиенту"""
+    drinks_list = data.get('drinks', [])
+    if drinks_list:
+        drinks_text = "\n".join([f"• {d['name']} x{d.get('quantity', 1)} - {d['price'] * d.get('quantity', 1)}₽" for d in drinks_list])
+    else:
+        drinks_text = "• Не выбраны"
+    
+    comment = data.get('comment', '')
+    comment_text = f"\n\n📝 <b>Примечание:</b>\n{comment}" if comment else ""
+    
+    return f"""
+✅ <b>ВАШ ЗАКАЗ ПРИНЯТ!</b> ✅
+
+🎫 <b>Номер заказа:</b> #{booking_id}
+⏰ <b>Время:</b> {data.get('time', '')}
+📍 <b>Зона:</b> {data.get('zone', '')}
+
+💨 <b>КАЛЬЯН:</b>
+• Вкус: {data.get('hookah', {}).get('flavor', '')}
+• Крепость: {data.get('hookah', {}).get('strength', '')}/10
+• Цена: {data.get('hookah', {}).get('price', 1300)}₽
+
+🍹 <b>НАПИТКИ:</b>
+{drinks_text}
+{comment_text}
+💰 <b>Итого к оплате:</b> {data.get('totalPrice', 0)}₽
+
+⏳ Статус: Ожидает подтверждения
+Скоро с вами свяжется администратор для уточнения деталей.
+    """
+
+# Функция форматирования заказа для персонала
+def format_order_for_staff(data, booking_id):
+    """Форматирует заказ для отправки персоналу"""
+    drinks_list = data.get('drinks', [])
+    if drinks_list:
+        drinks_text = "\n".join([f"• {d['name']} x{d.get('quantity', 1)} - {d['price'] * d.get('quantity', 1)}₽" for d in drinks_list])
+    else:
+        drinks_text = "• Не выбраны"
+    
+    comment = data.get('comment', '')
+    comment_text = f"\n\n📝 <b>Примечание клиента:</b>\n{comment}" if comment else ""
+    
+    return f"""
+🚨 <b>НОВЫЙ ЗАКАЗ #{booking_id}</b> 🚨
+
+👤 <b>Клиент:</b> {data.get('user_name', 'Гость')}
+🆔 <b>ID клиента:</b> <code>{data.get('user_id', 0)}</code>
+⏰ <b>Время:</b> {data.get('time', '')}
+📍 <b>Зона:</b> {data.get('zone', '')}
+
+💨 <b>КАЛЬЯН:</b>
+• Вкус: {data.get('hookah', {}).get('flavor', '')}
+• Крепость: {data.get('hookah', {}).get('strength', '')}/10
+• Цена: {data.get('hookah', {}).get('price', 1300)}₽
+
+🍹 <b>НАПИТКИ:</b>
+{drinks_text}
+{comment_text}
+
+💰 <b>Итого:</b> {data.get('totalPrice', 0)}₽
+🕐 <b>Создан:</b> {datetime.now().strftime('%H:%M:%S %d.%m.%Y')}
+    """
+
 # API для приёма заказов из Mini App
 @app.route('/booking', methods=['POST', 'OPTIONS'])
 def create_booking():
-    # Обрабатываем preflight запрос (OPTIONS)
     if request.method == 'OPTIONS':
         return '', 200
     
@@ -64,56 +130,42 @@ def create_booking():
         conn = sqlite3.connect('bookings.db')
         c = conn.cursor()
         c.execute('''INSERT INTO bookings 
-                     (user_id, user_name, time, zone, flavor, strength, drinks, total_price, created_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                     (user_id, user_name, time, zone, flavor, strength, drinks, total_price, comment, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                   (data.get('user_id', 0), 
                    data.get('user_name', 'Гость'), 
                    data.get('time', ''),
                    data.get('zone', ''),
                    data.get('hookah', {}).get('flavor', ''),
                    data.get('hookah', {}).get('strength', 5),
-                   json.dumps(data.get('drinks', [])),
+                   json.dumps(data.get('drinks', []), ensure_ascii=False),
                    data.get('totalPrice', 0),
+                   data.get('comment', ''),
                    datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         booking_id = c.lastrowid
         conn.commit()
         conn.close()
         
-        # Формируем сообщение для персонала
-        drinks_list = data.get('drinks', [])
-        if drinks_list:
-            drinks_text = "\n".join([f"• {d['name']} - {d['price']}₽" for d in drinks_list])
-        else:
-            drinks_text = "• Не выбраны"
-        
-        message = f"""
-🚨 <b>НОВЫЙ ЗАКАЗ #{booking_id}</b> 🚨
-
-👤 <b>Клиент:</b> {data.get('user_name', 'Гость')}
-⏰ <b>Время:</b> {data.get('time', '')}
-📍 <b>Зона:</b> {data.get('zone', '')}
-
-💨 <b>КАЛЬЯН:</b>
-• Вкус: {data.get('hookah', {}).get('flavor', '')}
-• Крепость: {data.get('hookah', {}).get('strength', '')}/10
-
-🍹 <b>НАПИТКИ:</b>
-{drinks_text}
-
-💰 <b>Сумма:</b> {data.get('totalPrice', 0)}₽
-        """
-        
-        # Отправляем в Telegram
+        # Отправляем сообщение персоналу
+        staff_message = format_order_for_staff(data, booking_id)
         if BOT_TOKEN and STAFF_CHAT_ID:
-            result = send_telegram_message(STAFF_CHAT_ID, message)
-            if result and result.get('ok'):
-                print(f"✅ Сообщение отправлено в чат {STAFF_CHAT_ID}")
+            result_staff = send_telegram_message(STAFF_CHAT_ID, staff_message)
+            if result_staff and result_staff.get('ok'):
+                print(f"✅ Сообщение персоналу отправлено в чат {STAFF_CHAT_ID}")
             else:
-                print(f"❌ Ошибка отправки: {result}")
-        else:
-            print("⚠️ BOT_TOKEN или STAFF_CHAT_ID не заданы")
+                print(f"❌ Ошибка отправки персоналу: {result_staff}")
         
-        # Добавляем CORS заголовки в ответ
+        # Отправляем копию заказа клиенту (если есть user_id)
+        client_message = format_order_for_client(data, booking_id)
+        if BOT_TOKEN and data.get('user_id') and data.get('user_id') != 0:
+            result_client = send_telegram_message(data['user_id'], client_message)
+            if result_client and result_client.get('ok'):
+                print(f"✅ Копия заказа отправлена клиенту {data['user_id']}")
+            else:
+                print(f"❌ Ошибка отправки клиенту: {result_client}")
+        else:
+            print("⚠️ Невозможно отправить копию клиенту: user_id не указан")
+        
         response = jsonify({'status': 'success', 'booking_id': booking_id})
         response.headers.add('Access-Control-Allow-Origin', '*')
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
@@ -125,6 +177,29 @@ def create_booking():
         response = jsonify({'status': 'error', 'message': str(e)})
         response.headers.add('Access-Control-Allow-Origin', '*')
         return response, 500
+
+# Эндпоинт для обработки данных из tg.sendData()
+@app.route('/webhook_data', methods=['POST'])
+def handle_webhook_data():
+    """Обрабатывает данные, отправленные через tg.sendData()"""
+    try:
+        data = request.json
+        print(f"📨 Получены данные из tg.sendData(): {data}")
+        
+        action = data.get('action')
+        
+        if action == 'send_copy':
+            # Отправляем копию заказа клиенту
+            chat_id = data.get('chat_id')
+            message = data.get('message')
+            if chat_id and message:
+                result = send_telegram_message(chat_id, message)
+                return jsonify({'status': 'ok', 'result': result})
+        
+        return jsonify({'status': 'ok'})
+    except Exception as e:
+        print(f"❌ Ошибка в webhook_data: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/send_test', methods=['GET'])
 def send_test():
