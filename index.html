@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Lounge Booking | 3D Барабаны</title>
+  <title>Lounge Booking</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * {
@@ -45,7 +45,6 @@
       background-clip: text;
       color: transparent;
       margin-bottom: 8px;
-      letter-spacing: -0.5px;
     }
 
     .subtitle {
@@ -74,15 +73,12 @@
       font-size: 24px;
     }
 
-    /* 3D Барабан */
     .picker-3d {
       position: relative;
       background: rgba(30, 30, 30, 0.9);
       border-radius: 20px;
       padding: 10px;
-      backdrop-filter: blur(10px);
       border: 1px solid rgba(46, 204, 113, 0.3);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     }
 
     .picker-3d-container {
@@ -98,7 +94,6 @@
       flex: 1;
       text-align: center;
       position: relative;
-      overflow: hidden;
     }
 
     .picker-label {
@@ -106,7 +101,6 @@
       color: #2ecc71;
       margin-bottom: 8px;
       text-transform: uppercase;
-      letter-spacing: 1px;
     }
 
     .picker-track {
@@ -117,16 +111,10 @@
       -webkit-overflow-scrolling: touch;
       border-radius: 12px;
       background: #0f0f0f;
-      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
     }
 
     .picker-track::-webkit-scrollbar {
       width: 2px;
-    }
-
-    .picker-track::-webkit-scrollbar-track {
-      background: #2a2a2a;
-      border-radius: 10px;
     }
 
     .picker-track::-webkit-scrollbar-thumb {
@@ -140,9 +128,7 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      font-weight: 500;
       scroll-snap-align: center;
-      transition: all 0.2s ease;
       color: #666;
     }
 
@@ -150,8 +136,6 @@
       color: #2ecc71;
       font-size: 24px;
       font-weight: 700;
-      text-shadow: 0 0 10px rgba(46, 204, 113, 0.5);
-      transform: scale(1.1);
     }
 
     .picker-overlay {
@@ -168,14 +152,6 @@
         rgba(26, 26, 26, 0.9) 100%);
     }
 
-    .strength-badge {
-      margin-top: 10px;
-      text-align: center;
-      font-size: 14px;
-      color: #2ecc71;
-    }
-
-    /* Двойной селект для вкусов */
     .flavor-select {
       width: 100%;
       padding: 14px 16px;
@@ -185,14 +161,8 @@
       color: #e0e0e0;
       font-size: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
     }
 
-    .flavor-select:hover {
-      border-color: #2ecc71;
-    }
-
-    /* Карточки напитков */
     .drinks-grid {
       display: flex;
       flex-direction: column;
@@ -207,8 +177,8 @@
       display: flex;
       align-items: center;
       gap: 16px;
-      transition: all 0.3s ease;
       cursor: pointer;
+      transition: all 0.3s ease;
     }
 
     .drink-card:hover {
@@ -239,13 +209,11 @@
     .drink-name {
       font-size: 17px;
       font-weight: 600;
-      margin-bottom: 4px;
     }
 
     .drink-price {
       color: #2ecc71;
       font-size: 15px;
-      font-weight: 600;
     }
 
     .drink-checkbox {
@@ -257,7 +225,6 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s ease;
     }
 
     .drink-card.selected .drink-checkbox {
@@ -268,8 +235,6 @@
     .drink-checkbox::after {
       content: "✓";
       color: #1a1a1a;
-      font-size: 16px;
-      font-weight: bold;
       display: none;
     }
 
@@ -292,36 +257,20 @@
       font-weight: 700;
       cursor: pointer;
       margin-top: 24px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-    }
-
-    .booking-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
     }
 
     .total-price {
-      background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
+      background: #1e1e1e;
       border-radius: 16px;
       padding: 16px;
-      margin-top: 20px;
       text-align: center;
-      border: 1px solid #2c2c2c;
+      margin-top: 20px;
     }
 
     .total-amount {
       font-size: 28px;
       font-weight: 700;
       color: #2ecc71;
-    }
-
-    @media (max-width: 480px) {
-      .drink-emoji {
-        font-size: 36px;
-        width: 52px;
-        height: 52px;
-      }
     }
   </style>
 </head>
@@ -330,7 +279,7 @@
   <h1>Lounge Booking</h1>
   <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-  <!-- Время - 3D барабаны -->
+  <!-- Время -->
   <div class="section">
     <div class="section-title">
       <span>⏰</span>
@@ -377,7 +326,7 @@
     </select>
   </div>
 
-  <!-- Кальян - расширенные вкусы + 3D барабан крепости -->
+  <!-- Кальян -->
   <div class="section">
     <div class="section-title">
       <span>💨</span>
@@ -390,15 +339,7 @@
       <option value="Виноград">Виноград 🍇</option>
       <option value="Клубника">Клубника 🍓</option>
       <option value="Персик">Персик 🍑</option>
-      <option value="Двойное яблоко">Двойное яблоко 🍎🍎</option>
       <option value="Манго">Манго 🥭</option>
-      <option value="Кола">Кола 🥤</option>
-      <option value="Лимон">Лимон 🍋</option>
-      <option value="Вишня">Вишня 🍒</option>
-      <option value="Малина">Малина 🍓</option>
-      <option value="Ананас">Ананас 🍍</option>
-      <option value="Кокос">Кокос 🥥</option>
-      <option value="Грейпфрут">Грейпфрут 🍊</option>
     </select>
     
     <div class="picker-3d">
@@ -421,7 +362,6 @@
       </div>
       <div class="picker-overlay"></div>
     </div>
-    <div class="strength-badge" id="strengthLabel">Крепость: 5</div>
   </div>
 
   <!-- Напитки -->
@@ -438,7 +378,7 @@
           <div class="drink-price">300 ₽</div>
         </div>
         <div class="drink-checkbox"></div>
-        <input type="checkbox" value="Лимонад" class="drink-input">
+        <input type="checkbox" class="drink-input">
       </div>
       <div class="drink-card" data-name="Чай" data-price="200">
         <div class="drink-emoji">🍵</div>
@@ -447,25 +387,25 @@
           <div class="drink-price">200 ₽</div>
         </div>
         <div class="drink-checkbox"></div>
-        <input type="checkbox" value="Чай" class="drink-input">
+        <input type="checkbox" class="drink-input">
       </div>
       <div class="drink-card" data-name="Мохито" data-price="350">
         <div class="drink-emoji">🍹</div>
         <div class="drink-info">
-          <div class="drink-name">Мохито безалкогольный</div>
+          <div class="drink-name">Мохито</div>
           <div class="drink-price">350 ₽</div>
         </div>
         <div class="drink-checkbox"></div>
-        <input type="checkbox" value="Мохито" class="drink-input">
+        <input type="checkbox" class="drink-input">
       </div>
       <div class="drink-card" data-name="Кофе" data-price="180">
         <div class="drink-emoji">☕</div>
         <div class="drink-info">
-          <div class="drink-name">Кофе эспрессо</div>
+          <div class="drink-name">Кофе</div>
           <div class="drink-price">180 ₽</div>
         </div>
         <div class="drink-checkbox"></div>
-        <input type="checkbox" value="Кофе" class="drink-input">
+        <input type="checkbox" class="drink-input">
       </div>
     </div>
   </div>
@@ -482,20 +422,22 @@
   tg.expand();
   tg.ready();
   
-  tg.MainButton.setText("📋 Оформить заказ");
-  tg.MainButton.show();
-  tg.MainButton.onClick(() => submitOrder());
-
-  // Инициализация 3D барабанов
+  // URL твоего Python бота (замени на свой после деплоя!)
+  const BOT_API_URL = "https://твой-бот.onrender.com/booking";
+  
+  let selectedHour = "18";
+  let selectedMinute = "00";
+  let selectedStrength = "5";
+  
+  // Инициализация барабанов
   function initPicker(trackId, callback) {
     const track = document.getElementById(trackId);
     if (!track) return;
-    
     const items = track.querySelectorAll('.picker-item');
+    
     const updateActive = () => {
       const scrollTop = track.scrollTop;
-      const itemHeight = 50;
-      const activeIndex = Math.round(scrollTop / itemHeight);
+      const activeIndex = Math.round(scrollTop / 50);
       items.forEach((item, idx) => {
         if (idx === activeIndex) {
           item.classList.add('active');
@@ -503,38 +445,20 @@
           item.classList.remove('active');
         }
       });
-      const activeValue = items[activeIndex]?.dataset.value;
-      if (activeValue && callback) callback(activeValue);
+      if (callback) callback(items[activeIndex]?.dataset.value);
     };
     
     track.addEventListener('scroll', updateActive);
-    track.addEventListener('touchmove', updateActive);
-    setTimeout(updateActive, 100);
-    
-    // Центрирование при загрузке
-    setTimeout(() => {
-      const activeItem = track.querySelector('.picker-item.active');
-      if (activeItem) {
-        track.scrollTop = Array.from(items).indexOf(activeItem) * 50;
-      }
-    }, 100);
+    updateActive();
   }
   
-  // Переменные для хранения выбранных значений
-  let selectedHour = "18";
-  let selectedMinute = "00";
-  let selectedStrength = "5";
-  
-  initPicker('hourTrack', (value) => { selectedHour = value; });
-  initPicker('minuteTrack', (value) => { selectedMinute = value; });
-  initPicker('strengthTrack', (value) => { 
-    selectedStrength = value;
-    document.getElementById('strengthLabel').textContent = `Крепость: ${value}`;
-  });
+  initPicker('hourTrack', (val) => { if(val) selectedHour = val; });
+  initPicker('minuteTrack', (val) => { if(val) selectedMinute = val; });
+  initPicker('strengthTrack', (val) => { if(val) selectedStrength = val; });
   
   // Напитки и сумма
   const drinkCards = document.querySelectorAll('.drink-card');
-  const totalAmountSpan = document.getElementById('totalAmount');
+  const totalSpan = document.getElementById('totalAmount');
   
   function updateTotal() {
     let total = 0;
@@ -543,27 +467,24 @@
         total += parseInt(card.dataset.price);
       }
     });
-    totalAmountSpan.textContent = total + ' ₽';
+    totalSpan.textContent = total + ' ₽';
     return total;
   }
   
   drinkCards.forEach(card => {
-    card.addEventListener('click', (e) => {
-      e.stopPropagation();
+    card.addEventListener('click', () => {
       card.classList.toggle('selected');
-      const checkbox = card.querySelector('.drink-input');
-      checkbox.checked = card.classList.contains('selected');
       updateTotal();
-      if (tg.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('light');
-      }
+      if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     });
   });
   
   updateTotal();
   
-  function submitOrder() {
+  async function submitOrder() {
+    const user = tg.initDataUnsafe?.user || {};
     const selectedDrinks = [];
+    
     drinkCards.forEach(card => {
       if (card.classList.contains('selected')) {
         selectedDrinks.push({
@@ -574,6 +495,8 @@
     });
     
     const bookingData = {
+      user_id: user.id || 0,
+      user_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Гость",
       time: `${selectedHour}:${selectedMinute}`,
       zone: document.getElementById("zone").value,
       hookah: {
@@ -581,16 +504,31 @@
         strength: parseInt(selectedStrength)
       },
       drinks: selectedDrinks,
-      totalPrice: updateTotal(),
-      timestamp: new Date().toISOString()
+      totalPrice: updateTotal()
     };
     
-    tg.sendData(JSON.stringify(bookingData));
-    
-    if (tg.showPopup) {
+    // Отправляем данные на сервер бота
+    try {
+      const response = await fetch(BOT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bookingData)
+      });
+      
+      const result = await response.json();
+      
+      if (result.status === 'success') {
+        tg.showPopup({
+          title: '✅ Забронировано!',
+          message: `Ваш заказ принят! Номер: #${result.booking_id}`,
+          buttons: [{type: 'ok'}]
+        });
+        tg.sendData(JSON.stringify(bookingData));
+      }
+    } catch (error) {
       tg.showPopup({
-        title: '✅ Готово!',
-        message: `Вы забронировали на ${bookingData.time}\nВкус: ${bookingData.hookah.flavor}\nКрепость: ${bookingData.hookah.strength}/10\nСумма: ${bookingData.totalPrice} ₽`,
+        title: '❌ Ошибка',
+        message: 'Не удалось отправить заказ. Попробуйте позже',
         buttons: [{type: 'ok'}]
       });
     }
