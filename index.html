@@ -50,7 +50,6 @@
             padding-left: 12px;
         }
 
-        /* Вкладки */
         .tabs {
             display: flex;
             gap: 10px;
@@ -106,7 +105,23 @@
             font-size: 24px;
         }
 
-        /* 3D барабан */
+        .date-input, .flavor-select, .comment-input {
+            width: 100%;
+            padding: 14px 16px;
+            background: #1e1e1e;
+            border: 1px solid #2c2c2c;
+            border-radius: 14px;
+            color: #e0e0e0;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .comment-input {
+            cursor: text;
+            resize: vertical;
+            font-family: inherit;
+        }
+
         .picker-3d {
             position: relative;
             background: rgba(30, 30, 30, 0.9);
@@ -152,20 +167,6 @@
             scrollbar-width: thin;
         }
 
-        .picker-track::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .picker-track::-webkit-scrollbar-track {
-            background: #1e1e1e;
-            border-radius: 10px;
-        }
-
-        .picker-track::-webkit-scrollbar-thumb {
-            background: #2ecc71;
-            border-radius: 10px;
-        }
-
         .picker-item {
             height: 50px;
             display: flex;
@@ -192,34 +193,33 @@
             right: 0;
             bottom: 70px;
             pointer-events: none;
-            background: linear-gradient(to bottom,
-                rgba(15, 15, 15, 0.92) 0%,
-                transparent 18%,
-                transparent 82%,
-                rgba(15, 15, 15, 0.92) 100%);
+            background: linear-gradient(to bottom, rgba(15, 15, 15, 0.92) 0%, transparent 18%, transparent 82%, rgba(15, 15, 15, 0.92) 100%);
             border-radius: 12px;
         }
 
-        .flavor-select, .comment-input {
-            width: 100%;
-            padding: 14px 16px;
-            background: #1e1e1e;
-            border: 1px solid #2c2c2c;
-            border-radius: 14px;
-            color: #e0e0e0;
-            font-size: 16px;
-            cursor: pointer;
+        /* Селект зоны с индикатором мест */
+        .zone-select-wrapper {
+            position: relative;
         }
 
-        .comment-input {
-            cursor: text;
-            resize: vertical;
-            font-family: inherit;
+        .zone-availability {
+            font-size: 12px;
+            margin-top: 8px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            background: #0f0f0f;
         }
 
-        .flavor-select:focus, .comment-input:focus {
-            outline: none;
-            border-color: #2ecc71;
+        .zone-availability.available {
+            color: #2ecc71;
+        }
+
+        .zone-availability.full {
+            color: #e74c3c;
+        }
+
+        .zone-availability.limited {
+            color: #f39c12;
         }
 
         .drinks-grid {
@@ -288,13 +288,6 @@
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .drink-qty-btn:active {
-            transform: scale(0.95);
-            background: #2ecc71;
-            color: #1a1a1a;
         }
 
         .drink-qty {
@@ -314,12 +307,6 @@
             border: 1px solid #2c2c2c;
         }
 
-        .total-label {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 8px;
-        }
-
         .total-amount {
             font-size: 36px;
             font-weight: 800;
@@ -332,26 +319,29 @@
             margin-top: 8px;
         }
 
-        .booking-btn {
+        .booking-btn, .edit-btn {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
             border: none;
             border-radius: 16px;
-            color: white;
             font-size: 18px;
             font-weight: 700;
             cursor: pointer;
             margin-top: 24px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
         }
 
-        .booking-btn:active {
-            transform: scale(0.98);
+        .booking-btn {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
         }
 
-        .booking-btn:disabled {
+        .edit-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+        }
+
+        .booking-btn:disabled, .edit-btn:disabled {
             opacity: 0.6;
         }
 
@@ -366,7 +356,6 @@
             display: none;
         }
 
-        /* История заказов */
         .history-list {
             display: flex;
             flex-direction: column;
@@ -380,11 +369,6 @@
             border: 1px solid #2c2c2c;
             border-radius: 16px;
             padding: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .history-item:hover {
-            border-color: #2ecc71;
         }
 
         .history-header {
@@ -421,20 +405,64 @@
             color: #ffc107;
         }
 
-        .history-details {
-            font-size: 14px;
-            color: #aaa;
-            margin-top: 8px;
+        .history-status.completed {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
         }
 
-        .history-details p {
-            margin: 4px 0;
+        .history-status.cancelled {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .history-edit-btn, .history-cancel-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .history-edit-btn {
+            background: #f39c12;
+            color: #1a1a1a;
+        }
+
+        .history-cancel-btn {
+            background: #e74c3c;
+            color: white;
         }
 
         .empty-history {
             text-align: center;
             padding: 40px;
             color: #888;
+        }
+
+        .edit-mode-badge {
+            background: #f39c12;
+            color: #1a1a1a;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .loading-availability {
+            text-align: center;
+            padding: 10px;
+            color: #888;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -443,7 +471,6 @@
     <h1>Биг Заза</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <!-- Вкладки -->
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('booking')">📝 Новый заказ</button>
         <button class="tab-btn" onclick="switchTab('history')">📜 Мои заказы</button>
@@ -451,6 +478,13 @@
 
     <!-- Вкладка: Новый заказ -->
     <div id="bookingTab" class="tab-content active">
+        <div id="editModeIndicator" class="edit-mode-badge" style="display: none;"></div>
+
+        <div class="section">
+            <div class="section-title"><span>📅</span><span>Дата</span></div>
+            <input type="date" id="date" class="date-input" min="">
+        </div>
+
         <div class="section">
             <div class="section-title"><span>⏰</span><span>Время</span></div>
             <div class="picker-3d">
@@ -470,12 +504,12 @@
 
         <div class="section">
             <div class="section-title"><span>📍</span><span>Зона</span></div>
-            <select id="zone" class="flavor-select">
+            <select id="zone" class="flavor-select" onchange="onZoneChange()">
                 <option value="Основная зона">Основная зона 🪑</option>
                 <option value="VIP комната">VIP комната 👑</option>
-                <option value="Балкон">Балкон 🌙</option>
                 <option value="Терраса">Терраса 🌿</option>
             </select>
+            <div id="zoneAvailability" class="zone-availability"></div>
         </div>
 
         <div class="section">
@@ -533,26 +567,23 @@
             </div>
         </div>
 
-        <!-- Поле для примечания -->
         <div class="section">
-            <div class="section-title"><span>📝</span><span>Примечание к заказу</span></div>
-            <textarea id="comment" class="comment-input" rows="3" placeholder="Особые пожелания, дополнительные требования..."></textarea>
+            <div class="section-title"><span>📝</span><span>Примечание</span></div>
+            <textarea id="comment" class="comment-input" rows="3" placeholder="Особые пожелания..."></textarea>
         </div>
 
         <div class="total-price">
-            <div class="total-label">💰 ИТОГО К ОПЛАТЕ</div>
             <div class="total-amount" id="totalAmount">1300 ₽</div>
             <div class="total-breakdown" id="totalBreakdown">(кальян 1300₽)</div>
         </div>
-        <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
+
+        <button class="booking-btn" id="submitBtn" onclick="submitOrder()">✨ Забронировать ✨</button>
+        <button class="edit-btn" id="updateBtn" style="display: none;" onclick="updateOrder()">✏️ Сохранить изменения</button>
         <div id="errorMessage" class="error-message"></div>
     </div>
 
-    <!-- Вкладка: История заказов -->
     <div id="historyTab" class="tab-content">
-        <div id="historyList" class="history-list">
-            <div class="empty-history">📭 У вас пока нет заказов</div>
-        </div>
+        <div id="historyList" class="history-list"><div class="empty-history">📭 У вас пока нет заказов</div></div>
     </div>
 </div>
 
@@ -561,70 +592,29 @@
     tg.expand();
     tg.ready();
 
-    const BOT_API_URL = "https://kalik-github-io-1.onrender.com/booking";
+    const BOT_API_URL = "https://kalik-github-io-1.onrender.com";
     const HOOKAH_PRICE = 1300;
     const STORAGE_KEY = "bigzaza_orders";
 
-    // === Управление вкладками ===
-    window.switchTab = function(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        if (tab === 'booking') {
-            document.querySelector('.tab-btn:first-child').classList.add('active');
-            document.getElementById('bookingTab').classList.add('active');
-        } else {
-            document.querySelector('.tab-btn:last-child').classList.add('active');
-            document.getElementById('historyTab').classList.add('active');
-            renderHistory();
-        }
+    let editingOrderId = null;
+    let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
+    let currentAvailability = {};
+
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').min = today;
+    document.getElementById('date').value = today;
+
+    // Зоны и их эмодзи
+    const zoneEmojis = {
+        'Основная зона': '🪑',
+        'VIP комната': '👑',
+        'Терраса': '🌿'
     };
 
-    // === Работа с историей заказов ===
-    function saveOrder(orderData) {
-        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-        orders.unshift(orderData); // новый заказ в начало
-        // Ограничим историю 50 заказами
-        if (orders.length > 50) orders.pop();
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
-    }
-
-    function getOrders() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    }
-
-    function renderHistory() {
-        const orders = getOrders();
-        const historyList = document.getElementById('historyList');
-        
-        if (orders.length === 0) {
-            historyList.innerHTML = '<div class="empty-history">📭 У вас пока нет заказов</div>';
-            return;
-        }
-        
-        historyList.innerHTML = orders.map(order => `
-            <div class="history-item">
-                <div class="history-header">
-                    <span class="history-id">#${order.booking_id}</span>
-                    <span class="history-date">${order.date}</span>
-                    <span class="history-status ${order.status === 'pending' ? 'pending' : ''}">${order.status === 'pending' ? '⏳ Новый' : '✅ Принят'}</span>
-                </div>
-                <div class="history-details">
-                    <p>⏰ ${order.time} | 📍 ${order.zone}</p>
-                    <p>💨 ${order.hookah_flavor} (${order.hookah_strength}/10)</p>
-                    ${order.drinks_text ? `<p>🍹 ${order.drinks_text}</p>` : ''}
-                    ${order.comment ? `<p>📝 ${order.comment}</p>` : ''}
-                    <p><strong>💰 ${order.total_price} ₽</strong></p>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // === Бесконечный циклический барабан ===
+    // === Барабаны ===
     function createInfinitePicker(containerId, values, onSelect, defaultIndex = 0) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        
         const itemHeight = 50;
         const bufferSize = 100;
         
@@ -647,13 +637,12 @@
         
         const updateActive = () => {
             const rawIdx = getIndexFromScroll();
-            const bufferIdx = rawIdx;
-            if (bufferIdx >= 0 && bufferIdx < items.length) {
+            if (rawIdx >= 0 && rawIdx < items.length) {
                 items.forEach((item, idx) => {
-                    if (idx === bufferIdx) item.classList.add('active');
+                    if (idx === rawIdx) item.classList.add('active');
                     else item.classList.remove('active');
                 });
-                const value = items[bufferIdx]?.dataset.value;
+                const value = items[rawIdx]?.dataset.value;
                 if (value && onSelect) onSelect(value);
             }
         };
@@ -677,23 +666,18 @@
             scrollTimeout = setTimeout(snapToCenter, 100);
         });
         container.addEventListener('touchend', () => setTimeout(snapToCenter, 60));
-        
         updateActive();
-        return { container, values };
     }
 
-    // Данные барабанов
     const hours = [18,19,20,21,22,23].map(v => ({ value: String(v), label: String(v) }));
     const minutes = [0,15,30,45].map(v => ({ value: v.toString().padStart(2,'0'), label: v.toString().padStart(2,'0') }));
     const strengths = [1,2,3,4,5,6,7,8,9,10].map(v => ({ value: String(v), label: String(v) }));
 
-    let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
-
-    createInfinitePicker('hourTrack', hours, (val) => { selectedHour = val; }, 0);
-    createInfinitePicker('minuteTrack', minutes, (val) => { selectedMinute = val; }, 0);
+    createInfinitePicker('hourTrack', hours, (val) => { selectedHour = val; checkAvailability(); }, 0);
+    createInfinitePicker('minuteTrack', minutes, (val) => { selectedMinute = val; checkAvailability(); }, 0);
     createInfinitePicker('strengthTrack', strengths, (val) => { selectedStrength = val; }, 4);
 
-    // Напитки с количеством
+    // === Напитки ===
     const drinks = {
         lemonade: { name: "Лимонад", price: 300, qty: 0 },
         tea: { name: "Чай", price: 200, qty: 0 },
@@ -727,8 +711,7 @@
         const drinksTotal = getDrinksTotal();
         const total = HOOKAH_PRICE + drinksTotal;
         document.getElementById('totalAmount').innerText = total + ' ₽';
-        const breakdown = drinksTotal > 0 ? `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽` : `(кальян ${HOOKAH_PRICE}₽)`;
-        document.getElementById('totalBreakdown').innerText = breakdown;
+        document.getElementById('totalBreakdown').innerText = drinksTotal > 0 ? `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽` : `(кальян ${HOOKAH_PRICE}₽)`;
         return total;
     }
     
@@ -742,122 +725,424 @@
             if (action === 'minus') changeQuantity(drinkId, -1);
         });
     });
-    
-    updateTotal();
-    
-    // Форматирование заказа для отображения
-    function formatOrderMessage(order, bookingId) {
-        const drinksList = order.drinks.map(d => `• ${d.name} x${d.quantity} - ${d.price * d.quantity}₽`).join('\n');
-        return `
-🚨 НОВЫЙ ЗАКАЗ #${bookingId} 🚨
 
-👤 Клиент: ${order.user_name}
-⏰ Время: ${order.time}
-📍 Зона: ${order.zone}
-
-💨 Кальян:
-• Вкус: ${order.hookah.flavor}
-• Крепость: ${order.hookah.strength}/10
-• Цена: ${order.hookah.price}₽
-
-🍹 Напитки:
-${drinksList || '• Не выбраны'}
-
-${order.comment ? `📝 Примечание:\n${order.comment}\n` : ''}
-💰 Итого: ${order.totalPrice}₽
-        `;
+    // === Проверка доступности мест ===
+    async function checkAvailability() {
+        const date = document.getElementById('date').value;
+        const time = `${selectedHour}:${selectedMinute}`;
+        
+        if (!date || !time) return;
+        
+        const zoneSelect = document.getElementById('zone');
+        const currentZone = zoneSelect.value;
+        
+        const availabilityDiv = document.getElementById('zoneAvailability');
+        availabilityDiv.innerHTML = '<div class="loading-availability">⏳ Проверка свободных мест...</div>';
+        
+        try {
+            const res = await fetch(`${BOT_API_URL}/availability?date=${date}&time=${time}`);
+            const result = await res.json();
+            
+            if (result.status === 'success') {
+                currentAvailability = result.availability;
+                
+                let html = '';
+                let currentZoneAvailable = true;
+                
+                for (const [zone, data] of Object.entries(currentAvailability)) {
+                    const emoji = zoneEmojis[zone] || '📍';
+                    const free = data.free;
+                    const total = data.total;
+                    let statusClass = 'available';
+                    let statusIcon = '✅';
+                    
+                    if (free === 0) {
+                        statusClass = 'full';
+                        statusIcon = '🔴';
+                        if (zone === currentZone) currentZoneAvailable = false;
+                    } else if (free <= Math.ceil(total / 2)) {
+                        statusClass = 'limited';
+                        statusIcon = '🟡';
+                    } else {
+                        statusIcon = '🟢';
+                    }
+                    
+                    html += `<div class="zone-availability ${statusClass}">${emoji} ${zone}: ${statusIcon} свободно ${free} из ${total} мест</div>`;
+                }
+                
+                availabilityDiv.innerHTML = html;
+                
+                // Блокируем выбор зоны, если нет мест
+                if (!currentZoneAvailable) {
+                    zoneSelect.classList.add('full-zone');
+                    zoneSelect.style.borderColor = '#e74c3c';
+                    
+                    // Ищем первую доступную зону
+                    for (const [zone, data] of Object.entries(currentAvailability)) {
+                        if (data.free > 0) {
+                            zoneSelect.value = zone;
+                            break;
+                        }
+                    }
+                } else {
+                    zoneSelect.classList.remove('full-zone');
+                    zoneSelect.style.borderColor = '#2c2c2c';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            availabilityDiv.innerHTML = '<div class="loading-availability">⚠️ Не удалось проверить доступность</div>';
+        }
     }
-    
-    async function submitOrder() {
+
+    function onZoneChange() {
+        const zone = document.getElementById('zone').value;
+        if (currentAvailability[zone] && currentAvailability[zone].free === 0) {
+            tg.showPopup({
+                title: '⚠️ Нет свободных мест',
+                message: `В зоне "${zone}" на выбранное время нет свободных мест. Пожалуйста, выберите другую зону или время.`,
+                buttons: [{type: 'ok'}]
+            });
+        }
+    }
+
+    document.getElementById('date').addEventListener('change', () => checkAvailability());
+
+    // === История заказов ===
+    function saveOrder(orderData) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        orders.unshift(orderData);
+        if (orders.length > 50) orders.pop();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+    }
+
+    function updateOrderInStorage(bookingId, updatedData) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const index = orders.findIndex(o => o.booking_id === bookingId);
+        if (index !== -1) {
+            orders[index] = { ...orders[index], ...updatedData };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+        }
+    }
+
+    function deleteOrderFromStorage(bookingId) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const filtered = orders.filter(o => o.booking_id !== bookingId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    }
+
+    function getOrders() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    function isOrderEditable(order) {
+        if (order.status === 'cancelled') return false;
+        if (order.status === 'completed') return false;
+        const orderDateTime = new Date(`${order.date.split(',')[0]} ${order.time}`);
+        const now = new Date();
+        return orderDateTime > now;
+    }
+
+    function renderHistory() {
+        const orders = getOrders();
+        const historyList = document.getElementById('historyList');
+        
+        if (orders.length === 0) {
+            historyList.innerHTML = '<div class="empty-history">📭 У вас пока нет заказов</div>';
+            return;
+        }
+        
+        historyList.innerHTML = orders.map(order => {
+            const isEditable = isOrderEditable(order);
+            const statusClass = order.status === 'cancelled' ? 'cancelled' : (order.status === 'completed' ? 'completed' : 'pending');
+            const statusText = order.status === 'cancelled' ? '❌ Отменён' : (order.status === 'completed' ? '✅ Выполнен' : '⏳ Активен');
+            
+            return `
+            <div class="history-item">
+                <div class="history-header">
+                    <span class="history-id">#${order.booking_id}</span>
+                    <span class="history-date">${order.date}</span>
+                    <span class="history-status ${statusClass}">${statusText}</span>
+                </div>
+                <div class="history-details">
+                    <p>📍 ${order.zone}</p>
+                    <p>💨 ${order.hookah_flavor} (${order.hookah_strength}/10)</p>
+                    ${order.drinks_text ? `<p>🍹 ${order.drinks_text}</p>` : ''}
+                    ${order.comment ? `<p>📝 ${order.comment}</p>` : ''}
+                    <p><strong>💰 ${order.total_price} ₽</strong></p>
+                </div>
+                ${isEditable ? `
+                <div class="history-actions">
+                    <button class="history-edit-btn" onclick="editOrder(${order.booking_id})">✏️ Редактировать</button>
+                    <button class="history-cancel-btn" onclick="cancelOrder(${order.booking_id})">❌ Отменить</button>
+                </div>
+                ` : ''}
+            </div>`;
+        }).join('');
+    }
+
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (tab === 'booking') {
+            document.querySelector('.tab-btn:first-child').classList.add('active');
+            document.getElementById('bookingTab').classList.add('active');
+            resetForm();
+        } else {
+            document.querySelector('.tab-btn:last-child').classList.add('active');
+            document.getElementById('historyTab').classList.add('active');
+            renderHistory();
+        }
+    }
+
+    function resetForm() {
+        editingOrderId = null;
+        document.getElementById('submitBtn').style.display = 'block';
+        document.getElementById('updateBtn').style.display = 'none';
+        document.getElementById('editModeIndicator').style.display = 'none';
+        
+        for (const id of Object.keys(drinks)) {
+            drinks[id].qty = 0;
+            updateDrinkUI(id);
+        }
+        document.getElementById('comment').value = '';
+        updateTotal();
+        checkAvailability();
+    }
+
+    function editOrder(bookingId) {
+        const orders = getOrders();
+        const order = orders.find(o => o.booking_id === bookingId);
+        if (!order || !isOrderEditable(order)) return;
+        
+        editingOrderId = bookingId;
+        
+        document.getElementById('date').value = order.date.split(',')[0];
+        const [hour, minute] = order.time.split(':');
+        selectedHour = hour;
+        selectedMinute = minute;
+        selectedStrength = order.hookah_strength.toString();
+        
+        document.getElementById('zone').value = order.zone;
+        document.getElementById('flavor').value = order.hookah_flavor;
+        document.getElementById('comment').value = order.comment || '';
+        
+        if (order.drinks_json) {
+            const drinksData = JSON.parse(order.drinks_json);
+            for (const drink of drinksData) {
+                const drinkId = getDrinkIdByName(drink.name);
+                if (drinkId && drinks[drinkId]) {
+                    drinks[drinkId].qty = drink.quantity || 1;
+                    updateDrinkUI(drinkId);
+                }
+            }
+        }
+        
+        setTimeout(() => {
+            syncPicker('hourTrack', selectedHour);
+            syncPicker('minuteTrack', selectedMinute);
+            syncPicker('strengthTrack', selectedStrength);
+        }, 100);
+        
+        updateTotal();
+        checkAvailability();
+        
+        document.getElementById('submitBtn').style.display = 'none';
+        document.getElementById('updateBtn').style.display = 'block';
+        document.getElementById('editModeIndicator').style.display = 'block';
+        document.getElementById('editModeIndicator').innerHTML = `✏️ Редактирование заказа #${bookingId}`;
+        
+        switchTab('booking');
+    }
+
+    function getDrinkIdByName(name) {
+        const map = { 'Лимонад': 'lemonade', 'Чай': 'tea', 'Мохито': 'mojito', 'Red Bull': 'redbull', 'Сок': 'juice' };
+        return map[name];
+    }
+
+    function syncPicker(trackId, value) {
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        const items = track.querySelectorAll('.picker-item');
+        let targetIndex = 0;
+        items.forEach((item, idx) => { if (item.dataset.value === value) targetIndex = idx; });
+        const itemHeight = 50;
+        track.scrollTop = targetIndex * itemHeight - (track.clientHeight / 2) + (itemHeight / 2);
+        setTimeout(() => track.dispatchEvent(new Event('scroll')), 50);
+    }
+
+    async function cancelOrder(bookingId) {
+        tg.showPopup({
+            title: '❌ Отмена заказа',
+            message: 'Вы уверены, что хотите отменить этот заказ?',
+            buttons: [{type: 'cancel', text: 'Нет'}, {type: 'default', text: 'Да, отменить'}]
+        }, async (btnId) => {
+            if (btnId === 'default') {
+                const user = tg.initDataUnsafe?.user || {};
+                try {
+                    await fetch(`${BOT_API_URL}/cancel`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ booking_id: bookingId, user_id: user.id })
+                    });
+                    
+                    const orders = getOrders();
+                    const index = orders.findIndex(o => o.booking_id === bookingId);
+                    if (index !== -1) {
+                        orders[index].status = 'cancelled';
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+                    }
+                    renderHistory();
+                    tg.showPopup({ title: '✅ Отменено', message: `Заказ #${bookingId} отменён.`, buttons: [{type: 'ok'}] });
+                } catch (err) {
+                    tg.showPopup({ title: '❌ Ошибка', message: 'Не удалось отменить заказ', buttons: [{type: 'ok'}] });
+                }
+            }
+        });
+    }
+
+    async function updateOrder() {
+        if (!editingOrderId) return;
+        
         const errorDiv = document.getElementById('errorMessage');
         errorDiv.style.display = 'none';
-        const btn = document.querySelector('.booking-btn');
+        const btn = document.getElementById('updateBtn');
         btn.disabled = true;
-        btn.innerText = '⏳ Отправка...';
+        btn.innerText = '⏳ Сохранение...';
         
         const user = tg.initDataUnsafe?.user || {};
-        const selectedDrinks = Object.entries(drinks)
-            .filter(([_,d]) => d.qty > 0)
-            .map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
-        
-        const comment = document.getElementById('comment').value;
+        const selectedDrinks = Object.entries(drinks).filter(([_,d]) => d.qty > 0).map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
+        const date = document.getElementById('date').value;
         
         const payload = {
+            booking_id: editingOrderId,
             user_id: user.id || 0,
             user_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Гость",
-            user_chat_id: user.id, // для отправки копии клиенту
+            date: date,
             time: `${selectedHour}:${selectedMinute}`,
             zone: document.getElementById("zone").value,
-            hookah: {
-                flavor: document.getElementById("flavor").value,
-                strength: parseInt(selectedStrength),
-                price: HOOKAH_PRICE
-            },
+            hookah: { flavor: document.getElementById("flavor").value, strength: parseInt(selectedStrength), price: HOOKAH_PRICE },
             drinks: selectedDrinks,
-            drinksTotal: getDrinksTotal(),
             totalPrice: HOOKAH_PRICE + getDrinksTotal(),
-            comment: comment
+            comment: document.getElementById('comment').value
         };
         
         try {
-            const res = await fetch(BOT_API_URL, {
+            const res = await fetch(`${BOT_API_URL}/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const result = await res.json();
+            
             if (result.status === 'success') {
-                // Формируем сообщение для показа клиенту
-                const clientMessage = formatOrderMessage(payload, result.booking_id);
+                const orders = getOrders();
+                const index = orders.findIndex(o => o.booking_id === editingOrderId);
+                if (index !== -1) {
+                    orders[index] = {
+                        ...orders[index],
+                        date: `${date} ${payload.time}`,
+                        time: payload.time,
+                        zone: payload.zone,
+                        hookah_flavor: payload.hookah.flavor,
+                        hookah_strength: payload.hookah.strength,
+                        drinks_text: selectedDrinks.map(d => `${d.name} x${d.quantity}`).join(', '),
+                        drinks_json: JSON.stringify(selectedDrinks),
+                        comment: payload.comment,
+                        total_price: payload.totalPrice
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+                }
                 
-                // Сохраняем в историю
+                tg.showPopup({ title: '✅ Обновлено', message: `Заказ #${editingOrderId} обновлён!`, buttons: [{type: 'ok'}] });
+                resetForm();
+                renderHistory();
+                switchTab('history');
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (err) {
+            errorDiv.innerText = `❌ ${err.message}`;
+            errorDiv.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = '✏️ Сохранить изменения';
+        }
+    }
+
+    async function submitOrder() {
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.style.display = 'none';
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.innerText = '⏳ Отправка...';
+        
+        const user = tg.initDataUnsafe?.user || {};
+        const selectedDrinks = Object.entries(drinks).filter(([_,d]) => d.qty > 0).map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
+        const date = document.getElementById('date').value;
+        
+        const payload = {
+            user_id: user.id || 0,
+            user_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Гость",
+            date: date,
+            time: `${selectedHour}:${selectedMinute}`,
+            zone: document.getElementById("zone").value,
+            hookah: { flavor: document.getElementById("flavor").value, strength: parseInt(selectedStrength), price: HOOKAH_PRICE },
+            drinks: selectedDrinks,
+            totalPrice: HOOKAH_PRICE + getDrinksTotal(),
+            comment: document.getElementById('comment').value
+        };
+        
+        // Проверка доступности перед отправкой
+        if (currentAvailability[payload.zone] && currentAvailability[payload.zone].free === 0) {
+            errorDiv.innerText = `❌ В зоне "${payload.zone}" на выбранное время нет свободных мест. Выберите другую зону или время.`;
+            errorDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.innerText = '✨ Забронировать ✨';
+            return;
+        }
+        
+        try {
+            const res = await fetch(`${BOT_API_URL}/booking`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            
+            if (result.status === 'success') {
                 const historyOrder = {
                     booking_id: result.booking_id,
-                    date: new Date().toLocaleString(),
+                    date: `${date} ${payload.time}`,
                     time: payload.time,
                     zone: payload.zone,
                     hookah_flavor: payload.hookah.flavor,
                     hookah_strength: payload.hookah.strength,
                     drinks_text: selectedDrinks.map(d => `${d.name} x${d.quantity}`).join(', '),
-                    comment: comment,
+                    drinks_json: JSON.stringify(selectedDrinks),
+                    comment: payload.comment,
                     total_price: payload.totalPrice,
                     status: 'pending'
                 };
                 saveOrder(historyOrder);
                 
-                tg.showPopup({ 
-                    title: '✅ Заказ оформлен!', 
-                    message: `Заказ #${result.booking_id} на сумму ${payload.totalPrice}₽ принят.\n\nКопия заказа отправлена вам в чат.`, 
-                    buttons: [{type: 'ok'}]
-                });
-                
-                // Отправляем копию заказа клиенту в Telegram
-                if (user.id) {
-                    tg.sendData(JSON.stringify({
-                        action: 'send_copy',
-                        chat_id: user.id,
-                        message: clientMessage
-                    }));
-                }
-                
-                // Очищаем корзину и примечание
-                for (const id of Object.keys(drinks)) {
-                    drinks[id].qty = 0;
-                    updateDrinkUI(id);
-                }
-                document.getElementById('comment').value = '';
-                updateTotal();
-                
-            } else throw new Error(result.message || 'Ошибка сервера');
+                tg.showPopup({ title: '✅ Заказ принят!', message: `Заказ #${result.booking_id} на ${payload.totalPrice}₽`, buttons: [{type: 'ok'}] });
+                resetForm();
+            } else {
+                throw new Error(result.message);
+            }
         } catch (err) {
-            errorDiv.innerText = `❌ Ошибка: ${err.message}`;
+            errorDiv.innerText = `❌ ${err.message}`;
             errorDiv.style.display = 'block';
-            tg.showPopup({ title: '❌ Ошибка', message: `Не удалось отправить заказ: ${err.message}`, buttons: [{type: 'ok'}] });
         } finally {
             btn.disabled = false;
             btn.innerText = '✨ Забронировать ✨';
         }
     }
+
+    checkAvailability();
+    updateTotal();
 </script>
 </body>
 </html>
