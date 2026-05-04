@@ -1,62 +1,481 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моё Mini App</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, sans-serif;
-            padding: 20px;
-            background: var(--tg-theme-bg-color);
-            color: var(--tg-theme-text-color);
-        }
-        button {
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Lounge Booking | Бронирование лаунж-зоны</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+      color: #e0e0e0;
+      padding: 20px 16px 32px;
+      min-height: 100vh;
+    }
+
+    /* Анимированное появление */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    /* Заголовок */
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 32px;
+      border-left: 3px solid #2ecc71;
+      padding-left: 12px;
+    }
+
+    /* Секции */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: #2ecc71;
+    }
+
+    .section-title span {
+      font-size: 24px;
+    }
+
+    /* Стилизованные селекты */
+    .custom-select {
+      width: 100%;
+      padding: 14px 16px;
+      background: #1e1e1e;
+      border: 1px solid #2c2c2c;
+      border-radius: 14px;
+      color: #e0e0e0;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232ecc71' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+    }
+
+    .custom-select:hover {
+      border-color: #2ecc71;
+      background-color: #252525;
+    }
+
+    .custom-select:focus {
+      outline: none;
+      border-color: #2ecc71;
+      box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    }
+
+    /* Двойной селект для кальяна (рядом) */
+    .double-select {
+      display: flex;
+      gap: 12px;
+    }
+
+    .double-select select {
+      flex: 1;
+    }
+
+    /* Карточки напитков */
+    .drinks-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .drink-card {
+      background: #1e1e1e;
+      border: 1px solid #2c2c2c;
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .drink-card:hover {
+      border-color: #2ecc71;
+      transform: translateX(4px);
+    }
+
+    .drink-card.selected {
+      border-color: #2ecc71;
+      background: rgba(46, 204, 113, 0.08);
+    }
+
+    .drink-emoji {
+      font-size: 48px;
+      background: #2a2a2a;
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+    }
+
+    .drink-info {
+      flex: 1;
+    }
+
+    .drink-name {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .drink-price {
+      color: #2ecc71;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .drink-price::before {
+      content: "💰 ";
+      color: #888;
+    }
+
+    /* Кастомный чекбокс */
+    .drink-checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #444;
+      border-radius: 8px;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .drink-card.selected .drink-checkbox {
+      background: #2ecc71;
+      border-color: #2ecc71;
+    }
+
+    .drink-checkbox::after {
+      content: "✓";
+      color: #1a1a1a;
+      font-size: 16px;
+      font-weight: bold;
+      display: none;
+    }
+
+    .drink-card.selected .drink-checkbox::after {
+      display: block;
+    }
+
+    input[type="checkbox"] {
+      display: none;
+    }
+
+    /* Кнопка бронирования */
+    .booking-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+      border: none;
+      border-radius: 16px;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    }
+
+    .booking-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+    }
+
+    .booking-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Итого */
+    .total-price {
+      background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 20px;
+      text-align: center;
+      border: 1px solid #2c2c2c;
+    }
+
+    .total-label {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .total-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: #2ecc71;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 480px) {
+      body {
+        padding: 16px;
+      }
+      
+      .drink-emoji {
+        font-size: 36px;
+        width: 52px;
+        height: 52px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>Привет, <span id="username">друг</span>!</h1>
-    <button id="sendData">Отправить данные боту</button>
+<div class="container">
+  <h1>Lounge Booking</h1>
+  <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        // Получаем объект Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        
-        // Сообщаем, что приложение готово
-        tg.ready();
-        
-        // Разворачиваем на весь экран
-        tg.expand();
-        
-        // Показываем главную кнопку
-        tg.MainButton.setText("Готово!");
-        tg.MainButton.show();
-        
-        // Получаем данные о пользователе
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            document.getElementById('username').textContent = 
-                tg.initDataUnsafe.user.first_name || 'пользователь';
-        }
-        
-        // Отправляем данные боту при нажатии
-        document.getElementById('sendData').onclick = () => {
-            tg.sendData(JSON.stringify({ action: 'button_click', time: Date.now() }));
-            tg.close(); // Закрываем приложение
-        };
-        
-        // Обработка нажатия на главную кнопку
-        tg.MainButton.onClick(() => {
-            tg.sendData(JSON.stringify({ action: 'main_button' }));
-            tg.close();
+  <!-- Время -->
+  <div class="section">
+    <div class="section-title">
+      <span>⏰</span>
+      <span>Время</span>
+    </div>
+    <select id="time" class="custom-select">
+      <option value="18:00">18:00</option>
+      <option value="18:30">18:30</option>
+      <option value="19:00">19:00</option>
+      <option value="19:30">19:30</option>
+      <option value="20:00">20:00</option>
+    </select>
+  </div>
+
+  <!-- Зона -->
+  <div class="section">
+    <div class="section-title">
+      <span>📍</span>
+      <span>Зона</span>
+    </div>
+    <select id="zone" class="custom-select">
+      <option value="Основная зона">Основная зона 🪑</option>
+      <option value="VIP комната">VIP комната 👑</option>
+    </select>
+  </div>
+
+  <!-- Кальян -->
+  <div class="section">
+    <div class="section-title">
+      <span>💨</span>
+      <span>Кальян</span>
+    </div>
+    <div class="double-select">
+      <select id="flavor" class="custom-select">
+        <option value="Мята">Мята 🌿</option>
+        <option value="Яблоко">Яблоко 🍎</option>
+        <option value="Арбуз">Арбуз 🍉</option>
+        <option value="Виноград">Виноград 🍇</option>
+      </select>
+      <select id="strength" class="custom-select">
+        <option value="Лёгкий">Лёгкий 🫧</option>
+        <option value="Средний">Средний ⚡</option>
+        <option value="Крепкий">Крепкий 🔥</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Напитки -->
+  <div class="section">
+    <div class="section-title">
+      <span>🍹</span>
+      <span>Напитки</span>
+    </div>
+    <div class="drinks-grid" id="drinksGrid">
+      <div class="drink-card" data-name="Лимонад" data-price="300">
+        <div class="drink-emoji">🍋</div>
+        <div class="drink-info">
+          <div class="drink-name">Лимонад</div>
+          <div class="drink-price">300 ₽</div>
+        </div>
+        <div class="drink-checkbox"></div>
+        <input type="checkbox" value="Лимонад" class="drink-input">
+      </div>
+      <div class="drink-card" data-name="Чай" data-price="200">
+        <div class="drink-emoji">🍵</div>
+        <div class="drink-info">
+          <div class="drink-name">Чай</div>
+          <div class="drink-price">200 ₽</div>
+        </div>
+        <div class="drink-checkbox"></div>
+        <input type="checkbox" value="Чай" class="drink-input">
+      </div>
+      <div class="drink-card" data-name="Мохито" data-price="350">
+        <div class="drink-emoji">🍹</div>
+        <div class="drink-info">
+          <div class="drink-name">Мохито безалкогольный</div>
+          <div class="drink-price">350 ₽</div>
+        </div>
+        <div class="drink-checkbox"></div>
+        <input type="checkbox" value="Мохито" class="drink-input">
+      </div>
+      <div class="drink-card" data-name="Кофе" data-price="180">
+        <div class="drink-emoji">☕</div>
+        <div class="drink-info">
+          <div class="drink-name">Кофе эспрессо</div>
+          <div class="drink-price">180 ₽</div>
+        </div>
+        <div class="drink-checkbox"></div>
+        <input type="checkbox" value="Кофе" class="drink-input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Блок с итоговой суммой -->
+  <div class="total-price" id="totalBlock">
+    <div class="total-label">💰 Итоговая сумма</div>
+    <div class="total-amount" id="totalAmount">0 ₽</div>
+  </div>
+
+  <!-- Кнопка бронирования -->
+  <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
+</div>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+  tg.ready();
+  
+  // Настройка главной кнопки Telegram
+  tg.MainButton.setText("📋 Оформить заказ");
+  tg.MainButton.show();
+  tg.MainButton.onClick(() => submitOrder());
+
+  // Обработка выбора напитков
+  const drinkCards = document.querySelectorAll('.drink-card');
+  const drinkInputs = document.querySelectorAll('.drink-input');
+  const totalAmountSpan = document.getElementById('totalAmount');
+
+  // Функция обновления итоговой суммы
+  function updateTotal() {
+    let total = 0;
+    drinkCards.forEach(card => {
+      if (card.classList.contains('selected')) {
+        const price = parseInt(card.dataset.price);
+        total += price;
+      }
+    });
+    totalAmountSpan.textContent = total + ' ₽';
+    return total;
+  }
+
+  // Обработка клика по карточке напитка
+  drinkCards.forEach(card => {
+    card.addEventListener('click', (e) => {
+      e.stopPropagation();
+      card.classList.toggle('selected');
+      const checkbox = card.querySelector('.drink-input');
+      checkbox.checked = card.classList.contains('selected');
+      updateTotal();
+      
+      // Тактильная обратная связь (если поддерживается)
+      if (tg.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('light');
+      }
+    });
+  });
+
+  // Инициализация суммы
+  updateTotal();
+
+  // Функция отправки заказа
+  function submitOrder() {
+    // Собираем выбранные напитки
+    const selectedDrinks = [];
+    drinkCards.forEach(card => {
+      if (card.classList.contains('selected')) {
+        selectedDrinks.push({
+          name: card.dataset.name,
+          price: parseInt(card.dataset.price)
         });
-    </script>
+      }
+    });
+
+    // Формируем данные для отправки
+    const bookingData = {
+      time: document.getElementById("time").value,
+      zone: document.getElementById("zone").value,
+      hookah: {
+        flavor: document.getElementById("flavor").value,
+        strength: document.getElementById("strength").value
+      },
+      drinks: selectedDrinks,
+      totalPrice: updateTotal(),
+      timestamp: new Date().toISOString()
+    };
+
+    // Отправляем данные в Telegram
+    tg.sendData(JSON.stringify(bookingData));
+    
+    // Показываем уведомление об успехе (опционально)
+    if (tg.showPopup) {
+      tg.showPopup({
+        title: '✅ Готово!',
+        message: `Вы забронировали столик на ${bookingData.time}\nСумма: ${bookingData.totalPrice} ₽`,
+        buttons: [{type: 'ok'}]
+      });
+    }
+    
+    // Отправка данных на сервер (если нужен бэкенд)
+    // fetch('/api/booking', {
+    //   method: 'POST',
+    //   headers: {'Content-Type': 'application/json'},
+    //   body: JSON.stringify(bookingData)
+    // });
+  }
+
+  // Плавная прокрутка при загрузке
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+</script>
 </body>
 </html>
