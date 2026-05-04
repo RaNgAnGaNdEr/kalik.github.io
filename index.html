@@ -28,14 +28,8 @@
         }
 
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
@@ -74,7 +68,7 @@
             font-size: 24px;
         }
 
-        /* Улучшенные 3D барабаны */
+        /* Чикоичный 3D барабан */
         .picker-3d {
             position: relative;
             background: rgba(30, 30, 30, 0.9);
@@ -117,6 +111,7 @@
             border-radius: 12px;
             background: #0a0a0a;
             border: 1px solid #2c2c2c;
+            scrollbar-width: thin;
         }
 
         .picker-track::-webkit-scrollbar {
@@ -133,25 +128,27 @@
             border-radius: 10px;
         }
 
+        /* Элементы барабана - высота ровно 50px */
         .picker-item {
             height: 50px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 20px;
             font-weight: 500;
-            scroll-snap-align: center;
-            transition: all 0.2s ease;
+            scroll-snap-align: start;
+            transition: all 0.15s ease;
             color: #666;
         }
 
         .picker-item.active {
             color: #2ecc71;
-            font-size: 26px;
+            font-size: 28px;
             font-weight: 800;
-            text-shadow: 0 0 8px rgba(46, 204, 113, 0.4);
+            text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
         }
 
+        /* Оверлей для затемнения сверху и снизу */
         .picker-overlay {
             position: absolute;
             top: 70px;
@@ -160,10 +157,10 @@
             bottom: 70px;
             pointer-events: none;
             background: linear-gradient(to bottom,
-                rgba(15, 15, 15, 0.95) 0%,
-                transparent 15%,
-                transparent 85%,
-                rgba(15, 15, 15, 0.95) 100%);
+                rgba(15, 15, 15, 0.92) 0%,
+                transparent 18%,
+                transparent 82%,
+                rgba(15, 15, 15, 0.92) 100%);
             border-radius: 12px;
         }
 
@@ -185,7 +182,7 @@
             border-color: #2ecc71;
         }
 
-        /* Напитки с количеством */
+        /* Напитки */
         .drinks-grid {
             display: flex;
             flex-direction: column;
@@ -235,7 +232,6 @@
             font-weight: 600;
         }
 
-        /* Контролы количества */
         .drink-controls {
             display: flex;
             align-items: center;
@@ -275,10 +271,6 @@
             text-align: center;
         }
 
-        .drink-qty-zero {
-            opacity: 0.5;
-        }
-
         /* Итого */
         .total-price {
             background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
@@ -299,6 +291,12 @@
             font-size: 36px;
             font-weight: 800;
             color: #2ecc71;
+        }
+
+        .total-breakdown {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
         }
 
         .booking-btn {
@@ -420,7 +418,7 @@
         </div>
     </div>
 
-    <!-- Напитки с количеством -->
+    <!-- Напитки -->
     <div class="section">
         <div class="section-title"><span>🍹</span><span>Напитки</span></div>
         <div class="drinks-grid" id="drinksGrid">
@@ -477,7 +475,8 @@
 
     <div class="total-price">
         <div class="total-label">💰 ИТОГО К ОПЛАТЕ</div>
-        <div class="total-amount" id="totalAmount">0 ₽</div>
+        <div class="total-amount" id="totalAmount">1300 ₽</div>
+        <div class="total-breakdown" id="totalBreakdown">(включая кальян 1300₽)</div>
     </div>
 
     <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
@@ -490,20 +489,23 @@
     tg.ready();
 
     const BOT_API_URL = "https://kalik-github-io-1.onrender.com/booking";
+    const HOOKAH_PRICE = 1300;
 
-    // --- Улучшенная инициализация барабанов (фикс съезжания) ---
+    // --- Чикоичные барабаны с фиксацией по центру ---
     let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
     
     function initPicker(trackId, callback, defaultValue) {
         const track = document.getElementById(trackId);
         if (!track) return;
         const items = track.querySelectorAll('.picker-item');
+        const itemHeight = 50;
         
-        // Функция обновления активного элемента
-        const updateActive = () => {
+        // Функция определения активного элемента (который в зоне прицела)
+        function updateActive() {
             const scrollTop = track.scrollTop;
-            const itemHeight = 50;
-            const activeIndex = Math.round(scrollTop / itemHeight);
+            // Расчёт: активный тот, чей верх максимально близок к середине
+            const targetScroll = scrollTop + (track.clientHeight / 2) - (itemHeight / 2);
+            const activeIndex = Math.round(targetScroll / itemHeight);
             const validIndex = Math.min(Math.max(activeIndex, 0), items.length - 1);
             
             items.forEach((item, idx) => {
@@ -517,9 +519,24 @@
             if (callback && items[validIndex]) {
                 callback(items[validIndex].dataset.value);
             }
-        };
+            return validIndex;
+        }
         
-        // Находим элемент с defaultValue и скроллим к нему
+        // Функция центрирования (доводки) после скролла
+        function snapToNearest() {
+            const scrollTop = track.scrollTop;
+            const targetScroll = scrollTop + (track.clientHeight / 2) - (itemHeight / 2);
+            const activeIndex = Math.round(targetScroll / itemHeight);
+            const validIndex = Math.min(Math.max(activeIndex, 0), items.length - 1);
+            // Плавная доводка до нужной позиции
+            track.scrollTo({
+                top: validIndex * itemHeight - (track.clientHeight / 2) + (itemHeight / 2),
+                behavior: 'smooth'
+            });
+            updateActive();
+        }
+        
+        // Находим элемент с defaultValue
         let targetIndex = 0;
         if (defaultValue) {
             items.forEach((item, idx) => {
@@ -529,17 +546,26 @@
             });
         }
         
-        // Устанавливаем скролл
-        track.scrollTop = targetIndex * 50;
+        // Устанавливаем начальную позицию
+        track.scrollTop = targetIndex * itemHeight - (track.clientHeight / 2) + (itemHeight / 2);
         
-        // Обновляем при скролле (с debounce для плавности)
+        // Обработчики событий
         let scrollTimeout;
         track.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(updateActive, 10);
+            updateActive();
+            scrollTimeout = setTimeout(snapToNearest, 100);
         });
         
-        setTimeout(updateActive, 50);
+        // Доводка после касания (touchend)
+        track.addEventListener('touchend', () => {
+            setTimeout(snapToNearest, 50);
+        });
+        
+        setTimeout(() => {
+            updateActive();
+            snapToNearest();
+        }, 30);
     }
     
     initPicker('hourTrack', (val) => { if(val) selectedHour = val; }, "18");
@@ -582,13 +608,31 @@
         }
     }
     
-    function updateTotal() {
+    function getDrinksTotal() {
         let total = 0;
         for (const drink of Object.values(drinks)) {
             total += drink.price * drink.qty;
         }
-        document.getElementById('totalAmount').textContent = total + ' ₽';
         return total;
+    }
+    
+    function updateTotal() {
+        const drinksTotal = getDrinksTotal();
+        const grandTotal = HOOKAH_PRICE + drinksTotal;
+        const totalSpan = document.getElementById('totalAmount');
+        const breakdownSpan = document.getElementById('totalBreakdown');
+        
+        if (totalSpan) {
+            totalSpan.textContent = grandTotal + ' ₽';
+        }
+        if (breakdownSpan) {
+            if (drinksTotal > 0) {
+                breakdownSpan.textContent = `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽`;
+            } else {
+                breakdownSpan.textContent = `(включая кальян ${HOOKAH_PRICE}₽)`;
+            }
+        }
+        return grandTotal;
     }
     
     // Привязываем обработчики к кнопкам
@@ -619,7 +663,6 @@
 
         const user = tg.initDataUnsafe?.user || {};
         
-        // Собираем напитки (только с количеством > 0)
         const selectedDrinks = [];
         for (const [id, drink] of Object.entries(drinks)) {
             if (drink.qty > 0) {
@@ -638,10 +681,12 @@
             zone: document.getElementById("zone").value,
             hookah: {
                 flavor: document.getElementById("flavor").value,
-                strength: parseInt(selectedStrength)
+                strength: parseInt(selectedStrength),
+                price: HOOKAH_PRICE
             },
             drinks: selectedDrinks,
-            totalPrice: updateTotal()
+            drinksTotal: getDrinksTotal(),
+            totalPrice: HOOKAH_PRICE + getDrinksTotal()
         };
 
         console.log("Отправляю заказ:", bookingData);
@@ -659,14 +704,9 @@
             if (result.status === 'success') {
                 tg.showPopup({
                     title: '✅ Забронировано!',
-                    message: `Ваш заказ #${result.booking_id} принят!`,
+                    message: `Ваш заказ #${result.booking_id} принят!\nСумма: ${bookingData.totalPrice}₽`,
                     buttons: [{type: 'ok'}]
                 });
-                // Можно очистить корзину после успеха
-                // for (const id of Object.keys(drinks)) {
-                //     drinks[id].qty = 0;
-                //     updateDrinkUI(id);
-                // }
             } else {
                 throw new Error(result.message || 'Неизвестная ошибка');
             }
