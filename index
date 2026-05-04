@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Моё Mini App</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+        }
+        button {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Привет, <span id="username">друг</span>!</h1>
+    <button id="sendData">Отправить данные боту</button>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        // Получаем объект Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        
+        // Сообщаем, что приложение готово
+        tg.ready();
+        
+        // Разворачиваем на весь экран
+        tg.expand();
+        
+        // Показываем главную кнопку
+        tg.MainButton.setText("Готово!");
+        tg.MainButton.show();
+        
+        // Получаем данные о пользователе
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('username').textContent = 
+                tg.initDataUnsafe.user.first_name || 'пользователь';
+        }
+        
+        // Отправляем данные боту при нажатии
+        document.getElementById('sendData').onclick = () => {
+            tg.sendData(JSON.stringify({ action: 'button_click', time: Date.now() }));
+            tg.close(); // Закрываем приложение
+        };
+        
+        // Обработка нажатия на главную кнопку
+        tg.MainButton.onClick(() => {
+            tg.sendData(JSON.stringify({ action: 'main_button' }));
+            tg.close();
+        });
+    </script>
+</body>
+</html>
