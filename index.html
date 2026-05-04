@@ -128,7 +128,6 @@
             border-radius: 10px;
         }
 
-        /* Элементы барабана - высота ровно 50px */
         .picker-item {
             height: 50px;
             display: flex;
@@ -148,7 +147,6 @@
             text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
         }
 
-        /* Оверлей для затемнения сверху и снизу */
         .picker-overlay {
             position: absolute;
             top: 70px;
@@ -164,7 +162,6 @@
             border-radius: 12px;
         }
 
-        /* Селекты */
         .flavor-select {
             width: 100%;
             padding: 14px 16px;
@@ -174,7 +171,6 @@
             color: #e0e0e0;
             font-size: 16px;
             cursor: pointer;
-            transition: all 0.3s ease;
         }
 
         .flavor-select:focus {
@@ -182,7 +178,6 @@
             border-color: #2ecc71;
         }
 
-        /* Напитки */
         .drinks-grid {
             display: flex;
             flex-direction: column;
@@ -223,13 +218,11 @@
         .drink-name {
             font-size: 17px;
             font-weight: 600;
-            margin-bottom: 4px;
         }
 
         .drink-price {
             color: #2ecc71;
             font-size: 14px;
-            font-weight: 600;
         }
 
         .drink-controls {
@@ -252,9 +245,6 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
         .drink-qty-btn:active {
@@ -271,7 +261,6 @@
             text-align: center;
         }
 
-        /* Итого */
         .total-price {
             background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
             border-radius: 16px;
@@ -320,7 +309,6 @@
 
         .booking-btn:disabled {
             opacity: 0.6;
-            transform: none;
         }
 
         .error-message {
@@ -331,7 +319,6 @@
             margin-top: 20px;
             color: #e74c3c;
             font-size: 14px;
-            text-align: center;
             display: none;
         }
     </style>
@@ -341,37 +328,23 @@
     <h1>Lounge Booking</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <!-- Время -->
     <div class="section">
         <div class="section-title"><span>⏰</span><span>Время</span></div>
         <div class="picker-3d">
             <div class="picker-3d-container">
                 <div class="picker-column">
                     <div class="picker-label">Час</div>
-                    <div class="picker-track" id="hourTrack">
-                        <div class="picker-item" data-value="18">18</div>
-                        <div class="picker-item" data-value="19">19</div>
-                        <div class="picker-item" data-value="20">20</div>
-                        <div class="picker-item" data-value="21">21</div>
-                        <div class="picker-item" data-value="22">22</div>
-                        <div class="picker-item" data-value="23">23</div>
-                    </div>
+                    <div class="picker-track" id="hourTrack"></div>
                 </div>
                 <div class="picker-column">
                     <div class="picker-label">Минуты</div>
-                    <div class="picker-track" id="minuteTrack">
-                        <div class="picker-item" data-value="00">00</div>
-                        <div class="picker-item" data-value="15">15</div>
-                        <div class="picker-item" data-value="30">30</div>
-                        <div class="picker-item" data-value="45">45</div>
-                    </div>
+                    <div class="picker-track" id="minuteTrack"></div>
                 </div>
             </div>
             <div class="picker-overlay"></div>
         </div>
     </div>
 
-    <!-- Зона -->
     <div class="section">
         <div class="section-title"><span>📍</span><span>Зона</span></div>
         <select id="zone" class="flavor-select">
@@ -382,7 +355,6 @@
         </select>
     </div>
 
-    <!-- Кальян -->
     <div class="section">
         <div class="section-title"><span>💨</span><span>Кальян</span></div>
         <select id="flavor" class="flavor-select" style="margin-bottom: 12px;">
@@ -399,76 +371,36 @@
         <div class="picker-3d">
             <div class="picker-3d-container">
                 <div class="picker-column">
-                    <div class="picker-label">Крепость (1-10)</div>
-                    <div class="picker-track" id="strengthTrack">
-                        <div class="picker-item" data-value="1">1</div>
-                        <div class="picker-item" data-value="2">2</div>
-                        <div class="picker-item" data-value="3">3</div>
-                        <div class="picker-item" data-value="4">4</div>
-                        <div class="picker-item" data-value="5">5</div>
-                        <div class="picker-item" data-value="6">6</div>
-                        <div class="picker-item" data-value="7">7</div>
-                        <div class="picker-item" data-value="8">8</div>
-                        <div class="picker-item" data-value="9">9</div>
-                        <div class="picker-item" data-value="10">10</div>
-                    </div>
+                    <div class="picker-label">Крепость</div>
+                    <div class="picker-track" id="strengthTrack"></div>
                 </div>
             </div>
             <div class="picker-overlay"></div>
         </div>
     </div>
 
-    <!-- Напитки -->
     <div class="section">
         <div class="section-title"><span>🍹</span><span>Напитки</span></div>
-        <div class="drinks-grid" id="drinksGrid">
+        <div class="drinks-grid">
             <div class="drink-card" data-name="Лимонад" data-price="300" data-id="lemonade">
                 <div class="drink-emoji">🍋</div>
-                <div class="drink-info">
-                    <div class="drink-name">Лимонад</div>
-                    <div class="drink-price">300 ₽/шт</div>
-                </div>
-                <div class="drink-controls">
-                    <button class="drink-qty-btn" data-action="minus">−</button>
-                    <span class="drink-qty" id="qty-lemonade">0</span>
-                    <button class="drink-qty-btn" data-action="plus">+</button>
-                </div>
+                <div class="drink-info"><div class="drink-name">Лимонад</div><div class="drink-price">300 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-lemonade">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
             <div class="drink-card" data-name="Чай" data-price="200" data-id="tea">
                 <div class="drink-emoji">🍵</div>
-                <div class="drink-info">
-                    <div class="drink-name">Чай</div>
-                    <div class="drink-price">200 ₽/шт</div>
-                </div>
-                <div class="drink-controls">
-                    <button class="drink-qty-btn" data-action="minus">−</button>
-                    <span class="drink-qty" id="qty-tea">0</span>
-                    <button class="drink-qty-btn" data-action="plus">+</button>
-                </div>
+                <div class="drink-info"><div class="drink-name">Чай</div><div class="drink-price">200 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-tea">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
             <div class="drink-card" data-name="Мохито" data-price="350" data-id="mojito">
                 <div class="drink-emoji">🍹</div>
-                <div class="drink-info">
-                    <div class="drink-name">Мохито</div>
-                    <div class="drink-price">350 ₽/шт</div>
-                </div>
-                <div class="drink-controls">
-                    <button class="drink-qty-btn" data-action="minus">−</button>
-                    <span class="drink-qty" id="qty-mojito">0</span>
-                    <button class="drink-qty-btn" data-action="plus">+</button>
-                </div>
+                <div class="drink-info"><div class="drink-name">Мохито</div><div class="drink-price">350 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-mojito">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
             <div class="drink-card" data-name="Кофе" data-price="180" data-id="coffee">
                 <div class="drink-emoji">☕</div>
-                <div class="drink-info">
-                    <div class="drink-name">Кофе</div>
-                    <div class="drink-price">180 ₽/шт</div>
-                </div>
-                <div class="drink-controls">
-                    <button class="drink-qty-btn" data-action="minus">−</button>
-                    <span class="drink-qty" id="qty-coffee">0</span>
-                    <button class="drink-qty-btn" data-action="plus">+</button>
-                </div>
+                <div class="drink-info"><div class="drink-name">Кофе</div><div class="drink-price">180 ₽/шт</div></div>
+                <div class="drink-controls"><button class="drink-qty-btn" data-action="minus">−</button><span class="drink-qty" id="qty-coffee">0</span><button class="drink-qty-btn" data-action="plus">+</button></div>
             </div>
         </div>
     </div>
@@ -476,9 +408,8 @@
     <div class="total-price">
         <div class="total-label">💰 ИТОГО К ОПЛАТЕ</div>
         <div class="total-amount" id="totalAmount">1300 ₽</div>
-        <div class="total-breakdown" id="totalBreakdown">(включая кальян 1300₽)</div>
+        <div class="total-breakdown" id="totalBreakdown">(кальян 1300₽)</div>
     </div>
-
     <button class="booking-btn" onclick="submitOrder()">✨ Забронировать ✨</button>
     <div id="errorMessage" class="error-message"></div>
 </div>
@@ -491,88 +422,84 @@
     const BOT_API_URL = "https://kalik-github-io-1.onrender.com/booking";
     const HOOKAH_PRICE = 1300;
 
-    // --- Чикоичные барабаны с фиксацией по центру ---
-    let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
-    
-    function initPicker(trackId, callback, defaultValue) {
-        const track = document.getElementById(trackId);
-        if (!track) return;
-        const items = track.querySelectorAll('.picker-item');
+    // Бесконечный циклический барабан
+    function createInfinitePicker(containerId, values, onSelect, defaultIndex = 0) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        
         const itemHeight = 50;
+        const visibleItems = 3;
+        const bufferSize = 100;
         
-        // Функция определения активного элемента (который в зоне прицела)
-        function updateActive() {
-            const scrollTop = track.scrollTop;
-            // Расчёт: активный тот, чей верх максимально близок к середине
-            const targetScroll = scrollTop + (track.clientHeight / 2) - (itemHeight / 2);
-            const activeIndex = Math.round(targetScroll / itemHeight);
-            const validIndex = Math.min(Math.max(activeIndex, 0), items.length - 1);
-            
-            items.forEach((item, idx) => {
-                if (idx === validIndex) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-            
-            if (callback && items[validIndex]) {
-                callback(items[validIndex].dataset.value);
+        // Создаём витрину
+        function buildItems() {
+            let html = '';
+            for (let i = 0; i < bufferSize; i++) {
+                const val = values[i % values.length];
+                html += `<div class="picker-item" data-value="${val.value}">${val.label}</div>`;
             }
-            return validIndex;
+            container.innerHTML = html;
         }
+        buildItems();
         
-        // Функция центрирования (доводки) после скролла
-        function snapToNearest() {
-            const scrollTop = track.scrollTop;
-            const targetScroll = scrollTop + (track.clientHeight / 2) - (itemHeight / 2);
-            const activeIndex = Math.round(targetScroll / itemHeight);
-            const validIndex = Math.min(Math.max(activeIndex, 0), items.length - 1);
-            // Плавная доводка до нужной позиции
-            track.scrollTo({
-                top: validIndex * itemHeight - (track.clientHeight / 2) + (itemHeight / 2),
-                behavior: 'smooth'
-            });
-            updateActive();
-        }
+        const items = container.querySelectorAll('.picker-item');
+        const getIndexFromScroll = () => {
+            const scrollTop = container.scrollTop;
+            const center = scrollTop + (container.clientHeight / 2) - (itemHeight / 2);
+            return Math.round(center / itemHeight);
+        };
         
-        // Находим элемент с defaultValue
-        let targetIndex = 0;
-        if (defaultValue) {
-            items.forEach((item, idx) => {
-                if (item.dataset.value === defaultValue.toString()) {
-                    targetIndex = idx;
-                }
-            });
-        }
+        const updateActive = () => {
+            const rawIdx = getIndexFromScroll();
+            const bufferIdx = rawIdx;
+            if (bufferIdx >= 0 && bufferIdx < items.length) {
+                items.forEach((item, idx) => {
+                    if (idx === bufferIdx) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+                const value = items[bufferIdx]?.dataset.value;
+                const realIdx = bufferIdx % values.length;
+                if (value && onSelect) onSelect(value, realIdx);
+            }
+        };
         
-        // Устанавливаем начальную позицию
-        track.scrollTop = targetIndex * itemHeight - (track.clientHeight / 2) + (itemHeight / 2);
+        const snapToCenter = () => {
+            const scrollTop = container.scrollTop;
+            const center = scrollTop + (container.clientHeight / 2) - (itemHeight / 2);
+            const targetIdx = Math.round(center / itemHeight);
+            const targetScroll = targetIdx * itemHeight - (container.clientHeight / 2) + (itemHeight / 2);
+            container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(updateActive, 120);
+        };
         
-        // Обработчики событий
+        // Устанавливаем начальную позицию (defaultIndex)
+        const startIdx = Math.floor(bufferSize / 2) + defaultIndex;
+        container.scrollTop = startIdx * itemHeight - (container.clientHeight / 2) + (itemHeight / 2);
+        
         let scrollTimeout;
-        track.addEventListener('scroll', () => {
+        container.addEventListener('scroll', () => {
             clearTimeout(scrollTimeout);
             updateActive();
-            scrollTimeout = setTimeout(snapToNearest, 100);
+            scrollTimeout = setTimeout(snapToCenter, 100);
         });
+        container.addEventListener('touchend', () => setTimeout(snapToCenter, 60));
         
-        // Доводка после касания (touchend)
-        track.addEventListener('touchend', () => {
-            setTimeout(snapToNearest, 50);
-        });
-        
-        setTimeout(() => {
-            updateActive();
-            snapToNearest();
-        }, 30);
+        updateActive();
+        return { container, values };
     }
-    
-    initPicker('hourTrack', (val) => { if(val) selectedHour = val; }, "18");
-    initPicker('minuteTrack', (val) => { if(val) selectedMinute = val; }, "00");
-    initPicker('strengthTrack', (val) => { if(val) selectedStrength = val; }, "5");
 
-    // --- Количества напитков ---
+    // Данные барабанов
+    const hours = [18,19,20,21,22,23].map(v => ({ value: String(v), label: String(v) }));
+    const minutes = [0,15,30,45].map(v => ({ value: v.toString().padStart(2,'0'), label: v.toString().padStart(2,'0') }));
+    const strengths = [1,2,3,4,5,6,7,8,9,10].map(v => ({ value: String(v), label: String(v) }));
+
+    let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
+
+    createInfinitePicker('hourTrack', hours, (val) => { selectedHour = val; }, 0);
+    createInfinitePicker('minuteTrack', minutes, (val) => { selectedMinute = val; }, 0);
+    createInfinitePicker('strengthTrack', strengths, (val) => { selectedStrength = val; }, 4);
+
+    // Напитки с количеством
     const drinks = {
         lemonade: { name: "Лимонад", price: 300, qty: 0 },
         tea: { name: "Чай", price: 200, qty: 0 },
@@ -582,99 +509,58 @@
     
     function updateDrinkUI(drinkId) {
         const qtySpan = document.getElementById(`qty-${drinkId}`);
-        if (qtySpan) {
-            qtySpan.textContent = drinks[drinkId].qty;
-        }
+        if (qtySpan) qtySpan.innerText = drinks[drinkId].qty;
         const card = document.querySelector(`.drink-card[data-id="${drinkId}"]`);
-        if (card) {
-            if (drinks[drinkId].qty > 0) {
-                card.classList.add('selected');
-            } else {
-                card.classList.remove('selected');
-            }
-        }
+        if (card) drinks[drinkId].qty > 0 ? card.classList.add('selected') : card.classList.remove('selected');
         updateTotal();
     }
     
-    function changeQuantity(drinkId, delta) {
+    window.changeQuantity = function(drinkId, delta) {
         const newQty = drinks[drinkId].qty + delta;
-        if (newQty >= 0 && newQty <= 99) {
+        if (newQty >= 0 && newQty <= 20) {
             drinks[drinkId].qty = newQty;
             updateDrinkUI(drinkId);
-            
-            if (tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
-    }
+    };
     
     function getDrinksTotal() {
-        let total = 0;
-        for (const drink of Object.values(drinks)) {
-            total += drink.price * drink.qty;
-        }
-        return total;
+        return Object.values(drinks).reduce((sum, d) => sum + (d.price * d.qty), 0);
     }
     
     function updateTotal() {
         const drinksTotal = getDrinksTotal();
-        const grandTotal = HOOKAH_PRICE + drinksTotal;
-        const totalSpan = document.getElementById('totalAmount');
-        const breakdownSpan = document.getElementById('totalBreakdown');
-        
-        if (totalSpan) {
-            totalSpan.textContent = grandTotal + ' ₽';
-        }
-        if (breakdownSpan) {
-            if (drinksTotal > 0) {
-                breakdownSpan.textContent = `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽`;
-            } else {
-                breakdownSpan.textContent = `(включая кальян ${HOOKAH_PRICE}₽)`;
-            }
-        }
-        return grandTotal;
+        const total = HOOKAH_PRICE + drinksTotal;
+        document.getElementById('totalAmount').innerText = total + ' ₽';
+        const breakdown = drinksTotal > 0 ? `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽` : `(кальян ${HOOKAH_PRICE}₽)`;
+        document.getElementById('totalBreakdown').innerText = breakdown;
+        return total;
     }
     
-    // Привязываем обработчики к кнопкам
     document.querySelectorAll('.drink-qty-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
             const card = btn.closest('.drink-card');
             const drinkId = card.dataset.id;
             const action = btn.dataset.action;
-            if (action === 'plus') {
-                changeQuantity(drinkId, 1);
-            } else if (action === 'minus') {
-                changeQuantity(drinkId, -1);
-            }
+            if (action === 'plus') changeQuantity(drinkId, 1);
+            if (action === 'minus') changeQuantity(drinkId, -1);
         });
     });
     
     updateTotal();
-
-    // --- Отправка заказа ---
+    
     async function submitOrder() {
         const errorDiv = document.getElementById('errorMessage');
         errorDiv.style.display = 'none';
-        
         const btn = document.querySelector('.booking-btn');
         btn.disabled = true;
-        btn.textContent = '⏳ Отправка...';
-
-        const user = tg.initDataUnsafe?.user || {};
+        btn.innerText = '⏳ Отправка...';
         
-        const selectedDrinks = [];
-        for (const [id, drink] of Object.entries(drinks)) {
-            if (drink.qty > 0) {
-                selectedDrinks.push({
-                    name: drink.name,
-                    price: drink.price,
-                    quantity: drink.qty
-                });
-            }
-        }
-
-        const bookingData = {
+        const user = tg.initDataUnsafe?.user || {};
+        const selectedDrinks = Object.entries(drinks).filter(([_,d]) => d.qty > 0).map(([_,d]) => ({ name: d.name, price: d.price, quantity: d.qty }));
+        
+        const payload = {
             user_id: user.id || 0,
             user_name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || "Гость",
             time: `${selectedHour}:${selectedMinute}`,
@@ -688,40 +574,24 @@
             drinksTotal: getDrinksTotal(),
             totalPrice: HOOKAH_PRICE + getDrinksTotal()
         };
-
-        console.log("Отправляю заказ:", bookingData);
-
+        
         try {
-            const response = await fetch(BOT_API_URL, {
+            const res = await fetch(BOT_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bookingData)
+                body: JSON.stringify(payload)
             });
-            
-            const result = await response.json();
-            console.log("Ответ сервера:", result);
-            
+            const result = await res.json();
             if (result.status === 'success') {
-                tg.showPopup({
-                    title: '✅ Забронировано!',
-                    message: `Ваш заказ #${result.booking_id} принят!\nСумма: ${bookingData.totalPrice}₽`,
-                    buttons: [{type: 'ok'}]
-                });
-            } else {
-                throw new Error(result.message || 'Неизвестная ошибка');
-            }
-        } catch (error) {
-            console.error("Ошибка:", error);
-            errorDiv.textContent = `❌ Ошибка: ${error.message}`;
+                tg.showPopup({ title: '✅ Готово!', message: `Заказ #${result.booking_id} на сумму ${payload.totalPrice}₽ принят.`, buttons: [{type: 'ok'}] });
+            } else throw new Error(result.message || 'Ошибка сервера');
+        } catch (err) {
+            errorDiv.innerText = `❌ Ошибка: ${err.message}`;
             errorDiv.style.display = 'block';
-            tg.showPopup({
-                title: '❌ Ошибка',
-                message: `Не удалось отправить заказ: ${error.message}`,
-                buttons: [{type: 'ok'}]
-            });
+            tg.showPopup({ title: '❌ Ошибка', message: `Не удалось отправить заказ: ${err.message}`, buttons: [{type: 'ok'}] });
         } finally {
             btn.disabled = false;
-            btn.textContent = '✨ Забронировать ✨';
+            btn.innerText = '✨ Забронировать ✨';
         }
     }
 </script>
