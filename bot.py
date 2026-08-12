@@ -4,9 +4,13 @@ import sqlite3
 import requests
 import threading
 import time
+import hmac
+import hashlib
+import secrets
 from datetime import datetime, timedelta
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import jwt
 
 app = Flask(__name__)
 CORS(app)
@@ -15,6 +19,12 @@ CORS(app)
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 STAFF_CHAT_ID = os.environ.get('STAFF_CHAT_ID')
 MANAGER_USERNAME = os.environ.get('MANAGER_USERNAME', 'phuket_tickets_manager')
+
+# Metered Realtime secret-key pair. Store these only in Render environment
+# variables. Never commit them or put them in index.html.
+METERED_SIGNALLING_KEY_ID = os.environ.get('METERED_SIGNALLING_KEY_ID')
+METERED_SIGNALLING_KEY_SECRET = os.environ.get('METERED_SIGNALLING_KEY_SECRET')
+VIEWER_ACCESS_KEY = os.environ.get('VIEWER_ACCESS_KEY')
 
 # Лимиты мест для каждой зоны
 ZONE_CAPACITY = {
@@ -45,6 +55,83 @@ def init_db():
     conn.close()
 
 init_db()
+
+def verify_telegram_webapp_init_data(init_data):
+    """Validate Telegram Mini App initData and return its user object."""
+    if not BOT_TOKEN or not init_data:
+        return None
+    from urllib.parse import parse_qsl
+    fields = dict(parse_qsl(init_data, keep_blank_values=True))
+    received_hash = fields.pop('hash', None)
+    if not received_hash:
+        return None
+    data_check_string = '\n'.join(f'{key}={value}' for key, value in sorted(fields.items()))
+    secret_key = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
+    calculated_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(calculated_hash, received_hash):
+        return None
+    try:
+        auth_date = int(fields.get('auth_date', '0'))
+        if abs(time.time() - auth_date) > 3600:
+            return None
+        return json.loads(fields['user'])
+    except (ValueError, KeyError, json.JSONDecodeError):
+        return None
+
+def mint_metered_token(subject, channels, peer_metadata):
+    if not METERED_SIGNALLING_KEY_ID or not METERED_SIGNALLING_KEY_SECRET:
+        raise RuntimeError('Metered secret key is not configured')
+    now = int(time.time())
+    return jwt.encode({
+        'sub': subject,
+        'channels': channels,
+        'permissions': ['publish', 'subscribe', 'presence', 'send'],
+        'peerMetadata': peer_metadata,
+        'iat': now,
+        'exp': now + 15 * 60,
+    }, METERED_SIGNALLING_KEY_SECRET, algorithm='HS256', headers={
+        'alg': 'HS256',
+        'kid': METERED_SIGNALLING_KEY_ID,
+    })
+
+@app.route('/camera/token', methods=['POST', 'OPTIONS'])
+def camera_token():
+    if request.method == 'OPTIONS':
+        return '', 204
+    user = verify_telegram_webapp_init_data((request.get_json(silent=True) or {}).get('initData'))
+    if not user:
+        return jsonify({'status': 'error', 'message': 'Telegram session verification failed'}), 401
+    user_id = str(user['id'])
+    channel = f'big-zaza-camera-{user_id}'
+    try:
+        token = mint_metered_token(
+            f'camera-{user_id}', [channel],
+            {'role': 'camera', 'name': user.get('first_name', 'Пользователь')}
+        )
+        return jsonify({'status': 'success', 'token': token, 'channel': channel})
+    except RuntimeError as error:
+        return jsonify({'status': 'error', 'message': str(error)}), 503
+
+@app.route('/camera/viewer-token', methods=['POST', 'OPTIONS'])
+def camera_viewer_token():
+    """Endpoint used only by the local viewer.py program on the owner's PC."""
+    if request.method == 'OPTIONS':
+        return '', 204
+    data = request.get_json(silent=True) or {}
+    supplied_key = request.headers.get('X-Viewer-Key', '')
+    if not VIEWER_ACCESS_KEY or not hmac.compare_digest(supplied_key, VIEWER_ACCESS_KEY):
+        return jsonify({'status': 'error', 'message': 'Unauthorized'}), 401
+    user_id = str(data.get('telegram_user_id', ''))
+    if not user_id.isdigit() or len(user_id) > 20:
+        return jsonify({'status': 'error', 'message': 'telegram_user_id is required'}), 400
+    try:
+        token = mint_metered_token(
+            f'viewer-{secrets.token_urlsafe(12)}', [f'big-zaza-camera-{user_id}'],
+            {'role': 'viewer', 'name': 'Оператор'}
+        )
+        return jsonify({'status': 'success', 'token': token, 'channel': f'big-zaza-camera-{user_id}'})
+    except RuntimeError as error:
+        return jsonify({'status': 'error', 'message': str(error)}), 503
 
 # Функция отправки сообщения в Telegram
 def send_telegram_message(chat_id, text, reply_markup=None):
