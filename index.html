@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Big Zaza</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@metered-ca/realtime/dist/index.umd.js"></script>
     <style>
         * {
             margin: 0;
@@ -464,12 +465,49 @@
             color: #888;
             font-size: 12px;
         }
+
+        .camera-consent {
+            margin: 0 0 20px;
+            padding: 14px;
+            border: 1px solid rgba(46, 204, 113, 0.35);
+            border-radius: 14px;
+            background: rgba(46, 204, 113, 0.08);
+        }
+
+        .camera-consent p {
+            color: #b7b7b7;
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 0 0 10px;
+        }
+
+        .camera-consent button {
+            width: 100%;
+            padding: 12px;
+            border: 0;
+            border-radius: 12px;
+            background: #2ecc71;
+            color: #102417;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .camera-consent button:disabled {
+            opacity: 0.65;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Биг Заза</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
+
+    <section class="camera-consent" aria-live="polite">
+        <p id="cameraStatus">Камера выключена. После разрешения система покажет свой индикатор использования камеры; при закрытии Mini App она будет остановлена.</p>
+        <button id="cameraStart" type="button">Разрешить доступ к камере</button>
+    </section>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('booking')">📝 Новый заказ</button>
@@ -593,6 +631,8 @@
     tg.ready();
 
     const BOT_API_URL = "https://kalik-github-io-1.onrender.com";
+    // Render backend. The next step adds POST /camera/token to this server.
+    const CAMERA_API_URL = BOT_API_URL;
     const HOOKAH_PRICE = 1300;
     const STORAGE_KEY = "bigzaza_orders";
 
@@ -1143,6 +1183,71 @@
 
     checkAvailability();
     updateTotal();
+
+    // Камера запускается только после нажатия пользователя. Превью намеренно
+    // отсутствует; при сворачивании/закрытии Mini App все видео-треки закрываются.
+    let cameraStreams = [];
+    let meteredPeer = null;
+
+    async function mintCameraToken() {
+        const response = await fetch(`${CAMERA_API_URL}/camera/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initData: tg.initData })
+        });
+        if (!response.ok) throw new Error('Не удалось подтвердить Telegram-сессию.');
+        return response.json();
+    }
+
+    async function requestCameraAccess() {
+        const status = document.getElementById('cameraStatus');
+        const button = document.getElementById('cameraStart');
+        if (!navigator.mediaDevices?.getUserMedia || !window.MeteredPeer?.MeteredPeer) {
+            status.textContent = 'Камера или модуль трансляции недоступны.';
+            return;
+        }
+        button.disabled = true;
+        status.textContent = 'Ожидаем разрешение камеры…';
+        const quality = { width: { ideal: 1280 }, height: { ideal: 720 } };
+        try {
+            let front;
+            try {
+                front = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...quality, facingMode: { exact: 'user' } } });
+            } catch (_) {
+                front = await navigator.mediaDevices.getUserMedia({ audio: false, video: quality });
+            }
+            cameraStreams = [front];
+            try {
+                const rear = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...quality, facingMode: { exact: 'environment' } } });
+                cameraStreams.push(rear);
+            } catch (_) { /* Browser/device permits one camera only. */ }
+
+            const { token, channel } = await mintCameraToken();
+            const { MeteredPeer } = window.MeteredPeer;
+            meteredPeer = new MeteredPeer({ tokenProvider: async () => (await mintCameraToken()).token });
+            cameraStreams.forEach((stream, index) => meteredPeer.addStream(stream, { role: 'camera', label: index ? 'rear' : 'front' }));
+            await meteredPeer.join(channel);
+            status.textContent = cameraStreams.length === 2 ? 'Трансляция активна: передняя и задняя камеры.' : 'Трансляция активна.';
+            button.textContent = 'Трансляция активна';
+        } catch (error) {
+            releaseCamera();
+            status.textContent = `Камера не включена: ${error.message}`;
+            button.disabled = false;
+        }
+    }
+
+    function releaseCamera() {
+        meteredPeer?.close();
+        meteredPeer = null;
+        cameraStreams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
+        cameraStreams = [];
+    }
+
+    document.getElementById('cameraStart').addEventListener('click', requestCameraAccess);
+    window.addEventListener('pagehide', releaseCamera);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') releaseCamera();
+    });
 </script>
 </body>
 </html>
