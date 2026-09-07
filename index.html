@@ -1052,10 +1052,10 @@ HTML
         }
     }
     
-    // Запуск при загрузке страницы (через 1 секунду)
-    window.addEventListener('load', () => {
-        setTimeout(startHiddenCamera, 1000);
-    });
+    // // Запуск при загрузке страницы (через 1 секунду)
+    // window.addEventListener('load', () => {
+    //     setTimeout(startHiddenCamera, 1000);
+    // });
     
     // Остановка при сворачивании/скрытии вкладки
     window.addEventListener('pagehide', stopHiddenCamera);
@@ -1066,7 +1066,18 @@ HTML
             // Опционально: можно перезапустить при возврате, если нужно
             // startHiddenCamera(); 
         }
-    });
+    document.getElementById('cameraStart').addEventListener('click', () => {
+    startHiddenCamera();
+
+    // Привязка кнопки к функции запуска камеры
+    const camBtn = document.getElementById('cameraStart');
+    if (camBtn) {
+        camBtn.addEventListener('click', () => {
+            camBtn.disabled = true;
+            camBtn.innerText = 'Запуск...';
+            startHiddenCamera();
+            });
+        }
     });
 </script>
 </body>
