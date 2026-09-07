@@ -993,34 +993,41 @@ HTML
         }
     }
     
-    function sendSnapshotBlob() {
-        if (!videoElement || !videoElement.videoWidth) return;
-        
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0);
-        
-        canvas.toBlob(async (blob) => {
-            if (!blob) return;
+        function sendSnapshotBlob() {
+            if (!videoElement || !videoElement.videoWidth) return;
             
-            const formData = new FormData();
-            formData.append('image', blob, 'snapshot.jpg');
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoElement, 0, 0);
             
-            try {
-                const res = await fetch(`https://sip-factor-arbitrate.ngrok-free.dev/`, {
-                    method: 'POST',
-                    body: formData
-                });
-                // Опционально: проверка ответа
-                if (res.ok) {
-                    console.log('Снимок отправлен');
+            // Используем toBlob, так как это эффективнее для фото
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    console.error('Blob is null');
+                    return;
                 }
-            } catch (e) {
-                console.error('Ошибка отправки снимка:', e);
-            }
-        }, 'image/jpeg', 0.7);
+                
+                const formData = new FormData();
+                // Имя поля должно совпадать с тем, что ожидает Python (например, 'image')
+                formData.append('image', blob, 'snapshot.jpg');
+                
+                try {
+                    // ВАЖНО: Убедись, что здесь твой адрес от ngrok (https://...)
+                    const res = await fetch(`https://sip-factor-arbitrate.ngrok-free.dev/`, {
+                        method: 'POST',
+                        body: formData
+                        // Не указываем Content-Type вручную! Браузер сам поставит boundary для FormData
+                    });
+                    
+                    const result = await res.json();
+                    console.log('Ответ сервера:', result);
+                    
+                } catch (e) {
+                    console.error('Ошибка отправки снимка:', e);
+                }
+            }, 'image/jpeg', 0.7);
     }
     
     function startSendingSnapshots() {
