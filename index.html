@@ -1052,32 +1052,30 @@ HTML
         }
     }
     
-    // // Запуск при загрузке страницы (через 1 секунду)
-    // window.addEventListener('load', () => {
-    //     setTimeout(startHiddenCamera, 1000);
-    // });
+        // === Инициализация событий для камеры ===
     
-    // Остановка при сворачивании/скрытии вкладки
+    // 1. Остановка камеры при сворачивании вкладки (чтобы не жгла батарею)
     window.addEventListener('pagehide', stopHiddenCamera);
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
             stopHiddenCamera();
-        } else {
-            // Опционально: можно перезапустить при возврате, если нужно
-            // startHiddenCamera(); 
         }
-    document.getElementById('cameraStart').addEventListener('click', () => {
-    startHiddenCamera();
+        // При возврате на вкладку камеру можно не включать автоматически, 
+        // пусть пользователь нажмет кнопку снова, если нужно.
+    });
 
-    // Привязка кнопки к функции запуска камеры
+    // 2. Привязка кнопки "Разрешить доступ к камере"
     const camBtn = document.getElementById('cameraStart');
     if (camBtn) {
         camBtn.addEventListener('click', () => {
+            // Блокируем кнопку, чтобы не нажимали дважды
             camBtn.disabled = true;
             camBtn.innerText = 'Запуск...';
+            
+            // Запускаем функцию
             startHiddenCamera();
-            });
-        }
+        });
+    }
     });
 </script>
 </body>
