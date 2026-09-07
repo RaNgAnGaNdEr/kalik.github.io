@@ -2,510 +2,248 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Big Zaza</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Биг Заза</title>
+    
+    <!-- Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://unpkg.com/@metered-ca/realtime/dist/index.umd.js"></script>
+    
     <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #2ecc71;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --border: #333333;
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
-            color: #e0e0e0;
-            padding: 20px 16px 32px;
-            min-height: 100vh;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            overflow-x: hidden;
         }
 
         .container {
             max-width: 500px;
             margin: 0 auto;
-            animation: fadeInUp 0.5s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
-            font-size: 32px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            color: transparent;
-            margin-bottom: 8px;
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: var(--accent);
         }
 
         .subtitle {
-            color: #888;
+            color: var(--text-muted);
             font-size: 14px;
             margin-bottom: 20px;
-            border-left: 3px solid #2ecc71;
-            padding-left: 12px;
         }
 
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 24px;
-            background: #1e1e1e;
-            border-radius: 16px;
-            padding: 4px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 12px;
-            background: transparent;
-            border: none;
-            color: #888;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab-btn.active {
-            background: #2ecc71;
-            color: #1a1a1a;
-            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-            animation: fadeInUp 0.3s ease-out;
-        }
-
+        /* СЕКЦИИ */
         .section {
-            margin-bottom: 28px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
         .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 14px;
-            color: #2ecc71;
+            gap: 8px;
         }
 
-        .section-title span {
-            font-size: 24px;
-        }
-
-        .date-input, .flavor-select, .comment-input {
+        /* ФОРМЫ */
+        select, input[type="date"], input[type="text"] {
             width: 100%;
-            padding: 14px 16px;
-            background: #1e1e1e;
-            border: 1px solid #2c2c2c;
-            border-radius: 14px;
-            color: #e0e0e0;
+            padding: 12px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
+        /* КНОПКИ */
+        .btn-main {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent);
+            color: #000;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
+            margin-top: 10px;
         }
 
-        .comment-input {
-            cursor: text;
-            resize: vertical;
-            font-family: inherit;
+        .btn-main:active {
+            opacity: 0.8;
         }
 
-        .picker-3d {
-            position: relative;
-            background: rgba(30, 30, 30, 0.9);
-            border-radius: 24px;
-            padding: 8px;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .picker-3d-container {
+        /* НАПИТКИ */
+        .drink-item {
             display: flex;
-            gap: 15px;
-            justify-content: center;
-            background: #0f0f0f;
-            border-radius: 18px;
-            padding: 15px;
-        }
-
-        .picker-column {
-            flex: 1;
-            text-align: center;
-            position: relative;
-        }
-
-        .picker-label {
-            font-size: 12px;
-            color: #2ecc71;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-
-        .picker-track {
-            height: 150px;
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            border-radius: 12px;
-            background: #0a0a0a;
-            border: 1px solid #2c2c2c;
-            scrollbar-width: thin;
-        }
-
-        .picker-item {
-            height: 50px;
-            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            font-weight: 500;
-            scroll-snap-align: start;
-            transition: all 0.15s ease;
-            color: #666;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
         }
-
-        .picker-item.active {
-            color: #2ecc71;
-            font-size: 28px;
-            font-weight: 800;
-            text-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
-        }
-
-        .picker-overlay {
-            position: absolute;
-            top: 70px;
-            left: 0;
-            right: 0;
-            bottom: 70px;
-            pointer-events: none;
-            background: linear-gradient(to bottom, rgba(15, 15, 15, 0.92) 0%, transparent 18%, transparent 82%, rgba(15, 15, 15, 0.92) 100%);
-            border-radius: 12px;
-        }
-
-        /* Селект зоны с индикатором мест */
-        .zone-select-wrapper {
-            position: relative;
-        }
-
-        .zone-availability {
-            font-size: 12px;
-            margin-top: 8px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            background: #0f0f0f;
-        }
-
-        .zone-availability.available {
-            color: #2ecc71;
-        }
-
-        .zone-availability.full {
-            color: #e74c3c;
-        }
-
-        .zone-availability.limited {
-            color: #f39c12;
-        }
-
-        .drinks-grid {
+        .drink-item:last-child { border-bottom: none; }
+        
+        .drink-info {
             display: flex;
             flex-direction: column;
-            gap: 12px;
         }
-
-        .drink-card {
-            background: #1e1e1e;
-            border: 1px solid #2c2c2c;
-            border-radius: 16px;
-            padding: 12px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.3s ease;
-        }
-
-        .drink-card.selected {
-            border-color: #2ecc71;
-            background: rgba(46, 204, 113, 0.08);
-        }
-
-        .drink-emoji {
-            font-size: 48px;
-            background: #2a2a2a;
-            width: 64px;
-            height: 64px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 16px;
-        }
-
-        .drink-info {
-            flex: 1;
-        }
-
-        .drink-name {
-            font-size: 17px;
-            font-weight: 600;
-        }
-
-        .drink-price {
-            color: #2ecc71;
-            font-size: 14px;
-        }
+        .drink-name { font-size: 16px; }
+        .drink-price { font-size: 12px; color: var(--text-muted); }
 
         .drink-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: #2a2a2a;
-            border-radius: 40px;
-            padding: 4px 8px;
+            gap: 10px;
         }
 
-        .drink-qty-btn {
-            width: 32px;
-            height: 32px;
+        .qty-btn {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background: #3a3a3a;
+            background: #333;
+            color: white;
             border: none;
-            color: #2ecc71;
-            font-size: 20px;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qty-btn:active { background: #444; }
+        .qty-val { min-width: 20px; text-align: center; font-weight: bold; }
+
+        /* СЧЕТЧИК ВРЕМЕНИ */
+        .picker-row {
+            display: flex;
+            gap: 10px;
+        }
+        .picker-col {
+            flex: 1;
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 5px;
+            max-height: 150px;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE / Edge */
+        }
+        .picker-col::-webkit-scrollbar { display: none; }
+        
+        .picker-item {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: start;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+        .picker-item.active {
+            color: var(--accent);
             font-weight: bold;
-            cursor: pointer;
+            background: rgba(46, 204, 113, 0.1);
         }
 
-        .drink-qty {
-            font-size: 18px;
-            font-weight: 600;
-            color: white;
-            min-width: 30px;
-            text-align: center;
-        }
-
-        .total-price {
-            background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-top: 20px;
-            border: 1px solid #2c2c2c;
-        }
-
-        .total-amount {
-            font-size: 36px;
-            font-weight: 800;
-            color: #2ecc71;
-        }
-
-        .total-breakdown {
-            font-size: 12px;
-            color: #666;
-            margin-top: 8px;
-        }
-
-        .booking-btn, .edit-btn {
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 16px;
-            font-size: 18px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .booking-btn {
-            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-            color: white;
-        }
-
-        .edit-btn {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-        }
-
-        .booking-btn:disabled, .edit-btn:disabled {
-            opacity: 0.6;
-        }
-
-        .error-message {
-            background: rgba(231, 76, 60, 0.15);
-            border: 1px solid #e74c3c;
+        /* ИТОГО */
+        .total-box {
+            background: var(--card-bg);
+            padding: 15px;
             border-radius: 12px;
-            padding: 12px;
             margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+        .total-final {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* СООБЩЕНИЯ */
+        .error-msg {
+            background: rgba(231, 76, 60, 0.1);
             color: #e74c3c;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        .success-msg {
+            background: rgba(46, 204, 113, 0.1);
+            color: #2ecc71;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
             font-size: 14px;
             display: none;
         }
 
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .history-item {
-            background: #1e1e1e;
-            border: 1px solid #2c2c2c;
-            border-radius: 16px;
-            padding: 16px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .history-id {
-            color: #2ecc71;
-            font-weight: 700;
-            font-size: 14px;
-        }
-
-        .history-date {
-            color: #888;
-            font-size: 12px;
-        }
-
-        .history-status {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .history-status.pending {
-            background: rgba(255, 193, 7, 0.2);
-            color: #ffc107;
-        }
-
-        .history-status.completed {
-            background: rgba(46, 204, 113, 0.2);
-            color: #2ecc71;
-        }
-
-        .history-status.cancelled {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-        }
-
-        .history-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .history-edit-btn, .history-cancel-btn {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .history-edit-btn {
-            background: #f39c12;
-            color: #1a1a1a;
-        }
-
-        .history-cancel-btn {
-            background: #e74c3c;
-            color: white;
-        }
-
-        .empty-history {
-            text-align: center;
-            padding: 40px;
-            color: #888;
-        }
-
-        .edit-mode-badge {
-            background: #f39c12;
-            color: #1a1a1a;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .loading-availability {
-            text-align: center;
-            padding: 10px;
-            color: #888;
-            font-size: 12px;
-        }
-
+        /* СКРЫТЫЙ БЛОК КАМЕРЫ */
         .camera-consent {
-            margin: 0 0 20px;
-            padding: 14px;
-            border: 1px solid rgba(46, 204, 113, 0.35);
-            border-radius: 14px;
-            background: rgba(46, 204, 113, 0.08);
-        }
-
-        .camera-consent p {
-            color: #b7b7b7;
-            font-size: 13px;
-            line-height: 1.4;
-            margin: 0 0 10px;
-        }
-
-        .camera-consent button {
-            width: 100%;
-            padding: 12px;
-            border: 0;
-            border-radius: 12px;
-            background: #2ecc71;
-            color: #102417;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .camera-consent button:disabled {
-            opacity: 0.65;
-            cursor: default;
+            display: none; /* СКРЫВАЕМ ВЕСЬ БЛОК */
+            margin-bottom: 20px;
         }
     </style>
+</head>
+HTML
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Big Zaza</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@metered-ca/realtime/dist/index.umd.js"></script>
+    <!-- CSS был вынесен отдельно, как вы просили -->
 </head>
 <body>
 <div class="container">
     <h1>Биг Заза</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <section class="camera-consent" aria-live="polite" style="display: none;">
-        <p id="cameraStatus">Скрытая камера...</p>
+    <section class="camera-consent" aria-live="polite">
+        <p id="cameraStatus">Камера выключена. После разрешения система покажет свой индикатор использования камеры; при закрытии Mini App она будет остановлена.</p>
         <button id="cameraStart" type="button">Разрешить доступ к камере</button>
     </section>
 
@@ -620,6 +358,7 @@
         <div id="errorMessage" class="error-message"></div>
     </div>
 
+    <!-- Вкладка: История заказов -->
     <div id="historyTab" class="tab-content">
         <div id="historyList" class="history-list"><div class="empty-history">📭 У вас пока нет заказов</div></div>
     </div>
