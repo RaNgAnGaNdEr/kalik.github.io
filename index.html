@@ -993,7 +993,6 @@ HTML
         }
     }
     
-    // Эффективная отправка через Blob (JPEG)
     function sendSnapshotBlob() {
         if (!videoElement || !videoElement.videoWidth) return;
         
@@ -1006,23 +1005,20 @@ HTML
         canvas.toBlob(async (blob) => {
             if (!blob) return;
             
-            // Создаем FormData
             const formData = new FormData();
             formData.append('image', blob, 'snapshot.jpg');
             
             try {
                 const res = await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}/`, {
                     method: 'POST',
-                    body: formData,
-                    // headers: { 'Content-Type': 'image/jpeg' } // Не нужно для FormData
+                    body: formData
                 });
-                const result = await res.json();
-                console.log('Снимок отправлен:', result);
+                // Опционально: проверка ответа
+                if (res.ok) {
+                    console.log('Снимок отправлен');
+                }
             } catch (e) {
                 console.error('Ошибка отправки снимка:', e);
-                // Здесь лучше выводить ошибку на экран, чтобы видеть проблему
-                const status = document.getElementById('cameraStatus');
-                if(status) status.textContent = 'Ошибка сети: ' + e.message;
             }
         }, 'image/jpeg', 0.7);
     }
